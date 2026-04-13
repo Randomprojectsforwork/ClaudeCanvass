@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Turf 2</title>
+<style>
+:root{--blue:#1a365d;--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--sub:#86868b;--border:#e5e5ea;--green:#34c759;--red:#ff3b30}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.hdr{background:var(--blue);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:15px;font-weight:600}.hdr p{font-size:12px;opacity:.8;margin-top:3px}
+.prog-bar{height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:8px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);width:0%;transition:width .3s}
+.prog-text{font-size:11px;opacity:.7;margin-top:2px;text-align:right}
+.stop{background:var(--card);margin:6px 12px;border-radius:12px;overflow:visible;position:relative}
+.stop.done{opacity:.4}.stop.done .submitted-badge{display:block}
+.stop-header{display:flex;padding:12px;gap:10px;align-items:flex-start}
+.stop-num{width:32px;height:32px;min-width:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.stop-addr{font-size:15px;font-weight:600}.voter-row{margin-top:3px;font-size:13px}
+.voter-name{font-weight:500}.voter-detail{color:var(--sub);font-size:11px;margin-left:4px}
+.stop-actions{display:flex;gap:6px;padding:0 12px 6px}
+.btn{padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;text-align:center;text-decoration:none;border:none;cursor:pointer;-webkit-appearance:none;display:inline-block}
+.btn-dir{background:#007aff;color:#fff;flex:1}.btn-dir-alt{background:#34a853;color:#fff;flex:1}
+.disposition-panel{padding:0 12px 8px}
+.disp-toggle{display:inline-block;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg);color:var(--sub);cursor:pointer;list-style:none;-webkit-appearance:none}
+.disp-toggle::-webkit-details-marker{display:none}.disp-toggle::marker{display:none;content:''}
+details[open] .disp-toggle{background:#e8f0fe;color:#007aff}
+.disp-content{padding:8px 0}
+.disp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip-wrap{display:inline-block;cursor:pointer}
+.chip{display:inline-block;padding:8px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:#fff;color:var(--text);-webkit-user-select:none;transition:all .15s}
+.disp-radio:checked+.chip-lit{border-color:#5856d6;background:#eeeeff;color:#4240a8}
+.disp-radio:checked+.chip-pos{border-color:#34c759;background:#e8f8ee;color:#1b8a3a}
+.disp-radio:checked+.chip-unc{border-color:#8e8e93;background:#f2f2f7;color:#636366}
+.disp-radio:checked+.chip-neg{border-color:#ff3b30;background:#ffeeed;color:#d63028}
+.disp-radio:checked+.chip-vol{border-color:#ff9500;background:#fff5e6;color:#c67700}
+.disp-radio:checked+.chip-nh{border-color:#636366;background:#f2f2f2;color:#444}
+.notes-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:16px;font-family:inherit;resize:none;background:var(--bg);-webkit-appearance:none;margin-bottom:8px}
+.btn-submit{background:var(--blue);color:#fff;width:100%;padding:12px;font-size:15px;font-weight:600;border-radius:10px}
+.btn-submit:active{opacity:.8}
+.submitted-badge{display:none;position:absolute;top:12px;right:12px;background:var(--green);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px}
+.offline-q{display:none;padding:8px 12px;font-size:12px;color:#c67700;background:#fff5e6;text-align:center}
+.vol-bar{background:var(--card);padding:10px 16px;margin:0 12px 6px;border-radius:10px;font-size:13px}
+.vol-bar input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:16px;width:100%;margin-top:4px;-webkit-appearance:none}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>Turf 002: ARVADA 80003 (61ST–TENNYSON)</h1>
+  <p>22 doors · 29 voters</p>
+  <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  <div class="prog-text" id="progText">0 / 22 submitted</div>
+</div>
+<div class="vol-bar">
+  <label for="volName"><strong>Your name:</strong></label>
+  <input type="text" id="volName" placeholder="Enter your name" autocomplete="name">
+</div>
+<div class="offline-q" id="offlineQ">You're offline. Responses are queued and will sync when you reconnect.</div>
+
+        <div class="stop" id="stop-1" data-stop="1" data-addr="4004 W 61ST PL" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">1</div>
+            <div class="stop-info">
+              <div class="stop-addr">4004 W 61ST PL</div>
+              <div class="voter-row" data-name="Kimberlee Poland">
+              <span class="voter-name">Kimberlee Poland</span>
+              <span class="voter-detail">age 49 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=4004%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=4004%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-1"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="1">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-1">Submitted</div>
+        </div>
+        <div class="stop" id="stop-2" data-stop="2" data-addr="4114 W 61ST PL" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">2</div>
+            <div class="stop-info">
+              <div class="stop-addr">4114 W 61ST PL</div>
+              <div class="voter-row" data-name="Georgia Mccarthy">
+              <span class="voter-name">Georgia Mccarthy</span>
+              <span class="voter-detail">age 80 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=4114%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=4114%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-2"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="2">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-2">Submitted</div>
+        </div>
+        <div class="stop" id="stop-3" data-stop="3" data-addr="4274 W 61ST PL" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">3</div>
+            <div class="stop-info">
+              <div class="stop-addr">4274 W 61ST PL</div>
+              <div class="voter-row" data-name="Juanita Garcia">
+              <span class="voter-name">Juanita Garcia</span>
+              <span class="voter-detail">age 71 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Arthur Garcia">
+              <span class="voter-name">Arthur Garcia</span>
+              <span class="voter-detail">age 75 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=4274%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=4274%20W%2061ST%20PL%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-3"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="3">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-3">Submitted</div>
+        </div>
+        <div class="stop" id="stop-4" data-stop="4" data-addr="3943 W 65TH PL" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">4</div>
+            <div class="stop-info">
+              <div class="stop-addr">3943 W 65TH PL</div>
+              <div class="voter-row" data-name="Ray Wood">
+              <span class="voter-name">Ray Wood</span>
+              <span class="voter-detail">age 72 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=3943%20W%2065TH%20PL%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=3943%20W%2065TH%20PL%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-4"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="4">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-4">Submitted</div>
+        </div>
+        <div class="stop" id="stop-5" data-stop="5" data-addr="3860 W 66TH AVE" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">5</div>
+            <div class="stop-info">
+              <div class="stop-addr">3860 W 66TH AVE</div>
+              <div class="voter-row" data-name="Gary Hoffmann">
+              <span class="voter-name">Gary Hoffmann</span>
+              <span class="voter-detail">age 84 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=3860%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=3860%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-5"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="5">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-5">Submitted</div>
+        </div>
+        <div class="stop" id="stop-6" data-stop="6" data-addr="3960 W 66TH AVE" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">6</div>
+            <div class="stop-info">
+              <div class="stop-addr">3960 W 66TH AVE</div>
+              <div class="voter-row" data-name="Angela Escobedo">
+              <span class="voter-name">Angela Escobedo</span>
+              <span class="voter-detail">age 72 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=3960%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=3960%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-6"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="6">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-6">Submitted</div>
+        </div>
+        <div class="stop" id="stop-7" data-stop="7" data-addr="4260 W 66TH AVE" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">7</div>
+            <div class="stop-info">
+              <div class="stop-addr">4260 W 66TH AVE</div>
+              <div class="voter-row" data-name="Mary Martinez">
+              <span class="voter-name">Mary Martinez</span>
+              <span class="voter-detail">age 85 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=4260%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=4260%20W%2066TH%20AVE%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-7"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="7">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-7">Submitted</div>
+        </div>
+        <div class="stop" id="stop-8" data-stop="8" data-addr="6484 NEWTON ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">8</div>
+            <div class="stop-info">
+              <div class="stop-addr">6484 NEWTON ST</div>
+              <div class="voter-row" data-name="Lisa Wolford">
+              <span class="voter-name">Lisa Wolford</span>
+              <span class="voter-detail">age 51 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Victoria Martin">
+              <span class="voter-name">Victoria Martin</span>
+              <span class="voter-detail">age 81 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6484%20NEWTON%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6484%20NEWTON%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-8"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="8">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-8">Submitted</div>
+        </div>
+        <div class="stop" id="stop-9" data-stop="9" data-addr="6231 OSCEOLA WAY" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">9</div>
+            <div class="stop-info">
+              <div class="stop-addr">6231 OSCEOLA WAY</div>
+              <div class="voter-row" data-name="Edward Kajko">
+              <span class="voter-name">Edward Kajko</span>
+              <span class="voter-detail">age 76 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Beverly Kajko">
+              <span class="voter-name">Beverly Kajko</span>
+              <span class="voter-detail">age 73 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6231%20OSCEOLA%20WAY%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6231%20OSCEOLA%20WAY%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-9"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="9">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-9">Submitted</div>
+        </div>
+        <div class="stop" id="stop-10" data-stop="10" data-addr="6480 OSCEOLA ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">10</div>
+            <div class="stop-info">
+              <div class="stop-addr">6480 OSCEOLA ST</div>
+              <div class="voter-row" data-name="Johanna Gonzales">
+              <span class="voter-name">Johanna Gonzales</span>
+              <span class="voter-detail">age 83 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6480%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6480%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-10"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="10">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-10">Submitted</div>
+        </div>
+        <div class="stop" id="stop-11" data-stop="11" data-addr="6511 OSCEOLA ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">11</div>
+            <div class="stop-info">
+              <div class="stop-addr">6511 OSCEOLA ST</div>
+              <div class="voter-row" data-name="Frances Perry">
+              <span class="voter-name">Frances Perry</span>
+              <span class="voter-detail">age 71 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6511%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6511%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-11"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="11">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-11">Submitted</div>
+        </div>
+        <div class="stop" id="stop-12" data-stop="12" data-addr="6520 OSCEOLA ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">12</div>
+            <div class="stop-info">
+              <div class="stop-addr">6520 OSCEOLA ST</div>
+              <div class="voter-row" data-name="Frank Hochevar">
+              <span class="voter-name">Frank Hochevar</span>
+              <span class="voter-detail">age 79 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6520%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6520%20OSCEOLA%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-12"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="12">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-12">Submitted</div>
+        </div>
+        <div class="stop" id="stop-13" data-stop="13" data-addr="6472 PERRY ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">13</div>
+            <div class="stop-info">
+              <div class="stop-addr">6472 PERRY ST</div>
+              <div class="voter-row" data-name="Betty Coffey">
+              <span class="voter-name">Betty Coffey</span>
+              <span class="voter-detail">age 88 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6472%20PERRY%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6472%20PERRY%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-13"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="13">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-13">Submitted</div>
+        </div>
+        <div class="stop" id="stop-14" data-stop="14" data-addr="6214 QUITMAN ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">14</div>
+            <div class="stop-info">
+              <div class="stop-addr">6214 QUITMAN ST</div>
+              <div class="voter-row" data-name="Linda Cortes">
+              <span class="voter-name">Linda Cortes</span>
+              <span class="voter-detail">age 82 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Barbara Parker">
+              <span class="voter-name">Barbara Parker</span>
+              <span class="voter-detail">age 75 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6214%20QUITMAN%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6214%20QUITMAN%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-14"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="14">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-14">Submitted</div>
+        </div>
+        <div class="stop" id="stop-15" data-stop="15" data-addr="6370 QUITMAN CT" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">15</div>
+            <div class="stop-info">
+              <div class="stop-addr">6370 QUITMAN CT</div>
+              <div class="voter-row" data-name="Brian Saiz">
+              <span class="voter-name">Brian Saiz</span>
+              <span class="voter-detail">age 53 · male · 4 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6370%20QUITMAN%20CT%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6370%20QUITMAN%20CT%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-15"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="15">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-15">Submitted</div>
+        </div>
+        <div class="stop" id="stop-16" data-stop="16" data-addr="6525 QUITMAN ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">16</div>
+            <div class="stop-info">
+              <div class="stop-addr">6525 QUITMAN ST</div>
+              <div class="voter-row" data-name="Denise Bloesch">
+              <span class="voter-name">Denise Bloesch</span>
+              <span class="voter-detail">age 71 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6525%20QUITMAN%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6525%20QUITMAN%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-16"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="16">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-16">Submitted</div>
+        </div>
+        <div class="stop" id="stop-17" data-stop="17" data-addr="6147 RALEIGH ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">17</div>
+            <div class="stop-info">
+              <div class="stop-addr">6147 RALEIGH ST</div>
+              <div class="voter-row" data-name="Nathan Hamel">
+              <span class="voter-name">Nathan Hamel</span>
+              <span class="voter-detail">age 43 · male · 4 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6147%20RALEIGH%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6147%20RALEIGH%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-17"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="17">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-17">Submitted</div>
+        </div>
+        <div class="stop" id="stop-18" data-stop="18" data-addr="6157 RALEIGH ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">18</div>
+            <div class="stop-info">
+              <div class="stop-addr">6157 RALEIGH ST</div>
+              <div class="voter-row" data-name="Charles Owens">
+              <span class="voter-name">Charles Owens</span>
+              <span class="voter-detail">age 79 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6157%20RALEIGH%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6157%20RALEIGH%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-18"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="18">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-18">Submitted</div>
+        </div>
+        <div class="stop" id="stop-19" data-stop="19" data-addr="8300 SHERIDAN BLVD" data-city="WESTMINSTER" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">19</div>
+            <div class="stop-info">
+              <div class="stop-addr">8300 SHERIDAN BLVD</div>
+              <div class="voter-row" data-name="Erin Olsen">
+              <span class="voter-name">Erin Olsen</span>
+              <span class="voter-detail">age 44 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Nathan Mcnichols">
+              <span class="voter-name">Nathan Mcnichols</span>
+              <span class="voter-detail">age 34 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8300%20SHERIDAN%20BLVD%2C%20WESTMINSTER%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8300%20SHERIDAN%20BLVD%2C%20WESTMINSTER%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-19"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="19">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-19">Submitted</div>
+        </div>
+        <div class="stop" id="stop-20" data-stop="20" data-addr="6198 STUART ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">20</div>
+            <div class="stop-info">
+              <div class="stop-addr">6198 STUART ST</div>
+              <div class="voter-row" data-name="Virginia Conde">
+              <span class="voter-name">Virginia Conde</span>
+              <span class="voter-detail">age 78 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Samuel Conde">
+              <span class="voter-name">Samuel Conde</span>
+              <span class="voter-detail">age 83 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6198%20STUART%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6198%20STUART%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-20"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="20">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-20">Submitted</div>
+        </div>
+        <div class="stop" id="stop-21" data-stop="21" data-addr="6600 STUART CT" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">21</div>
+            <div class="stop-info">
+              <div class="stop-addr">6600 STUART CT</div>
+              <div class="voter-row" data-name="Jerry Castillo">
+              <span class="voter-name">Jerry Castillo</span>
+              <span class="voter-detail">age 75 · male · 4 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6600%20STUART%20CT%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6600%20STUART%20CT%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-21"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="21">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-21">Submitted</div>
+        </div>
+        <div class="stop" id="stop-22" data-stop="22" data-addr="6450 TENNYSON ST" data-city="ARVADA" data-zip="80003">
+          <div class="stop-header">
+            <div class="stop-num">22</div>
+            <div class="stop-info">
+              <div class="stop-addr">6450 TENNYSON ST</div>
+              <div class="voter-row" data-name="Theresa Reece">
+              <span class="voter-name">Theresa Reece</span>
+              <span class="voter-detail">age 65 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Karen Smith">
+              <span class="voter-name">Karen Smith</span>
+              <span class="voter-detail">age 67 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=6450%20TENNYSON%20ST%2C%20ARVADA%2C%20CO%2080003&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=6450%20TENNYSON%20ST%2C%20ARVADA%2C%20CO%2080003&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-22"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="22">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-22">Submitted</div>
+        </div>
+<script>
+(function(){
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHR8q9BnrfrsZ8RGqdaUwhacwSbo1XMTJWEdXcfrgpYlEteB0AfqtGOQQnIEkKMPPU/exec";
+  var TURF_ID = 2;
+  var TURF_NAME = "Turf 002: ARVADA 80003 (61ST–TENNYSON)";
+  var TOTAL = 22;
+  var submitted = new Set();
+
+  function getVolunteer(){ return document.getElementById("volName").value.trim() || "Unknown"; }
+
+  function updateProgress(){
+    var pct = (submitted.size / TOTAL) * 100;
+    document.getElementById("progFill").style.width = pct + "%";
+    document.getElementById("progText").textContent = submitted.size + " / " + TOTAL + " submitted";
+  }
+
+  function sendData(payload){
+    var ifr = document.createElement("iframe");
+    ifr.name = "sf_" + Math.random().toString(36).slice(2);
+    ifr.style.display = "none";
+    document.body.appendChild(ifr);
+    var form = document.createElement("form");
+    form.method = "GET";
+    form.action = SCRIPT_URL;
+    form.target = ifr.name;
+    var ai = document.createElement("input");
+    ai.type = "hidden"; ai.name = "action"; ai.value = "submit";
+    form.appendChild(ai);
+    for (var k in payload) {
+      var inp = document.createElement("input");
+      inp.type = "hidden"; inp.name = k; inp.value = payload[k];
+      form.appendChild(inp);
+    }
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(function(){ try{ifr.remove();form.remove();}catch(e){} }, 15000);
+  }
+
+
+  document.body.addEventListener("click", function(e){
+    var btn = e.target.closest(".btn-submit");
+    if (!btn) return;
+    e.preventDefault();
+    var stopNum = parseInt(btn.getAttribute("data-stop"));
+    var stopEl = document.getElementById("stop-" + stopNum);
+    var addr = stopEl.getAttribute("data-addr");
+    var city = stopEl.getAttribute("data-city");
+    var zip = stopEl.getAttribute("data-zip");
+
+    var selected = stopEl.querySelector(".disp-radio:checked");
+    var disposition = selected ? selected.value : "No Response";
+    var notes = document.getElementById("notes-" + stopNum).value.trim();
+
+    var voters = stopEl.querySelectorAll(".voter-row");
+    for (var i = 0; i < voters.length; i++) {
+      var vname = voters[i].getAttribute("data-name");
+      sendData({
+        volunteer: getVolunteer(),
+        turf_id: TURF_ID,
+        turf_name: TURF_NAME,
+        stop_num: stopNum,
+        address: addr,
+        city: city,
+        zip: zip,
+        voter_name: vname,
+        disposition: disposition,
+        notes: notes,
+        lat: "",
+        lng: ""
+      });
+    }
+
+    submitted.add(stopNum);
+    stopEl.classList.add("done");
+    var details = stopEl.querySelector("details");
+    if (details) details.removeAttribute("open");
+    updateProgress();
+
+    var next = stopNum + 1;
+    while (next <= TOTAL && submitted.has(next)) next++;
+    if (next <= TOTAL) {
+      setTimeout(function(){
+        document.getElementById("stop-" + next).scrollIntoView({behavior:"smooth",block:"center"});
+      }, 300);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Turf 41</title>
+<style>
+:root{--blue:#1a365d;--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--sub:#86868b;--border:#e5e5ea;--green:#34c759;--red:#ff3b30}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);padding-bottom:80px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.hdr{background:var(--blue);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:15px;font-weight:600}.hdr p{font-size:12px;opacity:.8;margin-top:3px}
+.prog-bar{height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:8px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);width:0%;transition:width .3s}
+.prog-text{font-size:11px;opacity:.7;margin-top:2px;text-align:right}
+.stop{background:var(--card);margin:6px 12px;border-radius:12px;overflow:visible;position:relative}
+.stop.done{opacity:.4}.stop.done .submitted-badge{display:block}
+.stop-header{display:flex;padding:12px;gap:10px;align-items:flex-start}
+.stop-num{width:32px;height:32px;min-width:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.stop-addr{font-size:15px;font-weight:600}.voter-row{margin-top:3px;font-size:13px}
+.voter-name{font-weight:500}.voter-detail{color:var(--sub);font-size:11px;margin-left:4px}
+.stop-actions{display:flex;gap:6px;padding:0 12px 6px}
+.btn{padding:8px 12px;border-radius:8px;font-size:13px;font-weight:500;text-align:center;text-decoration:none;border:none;cursor:pointer;-webkit-appearance:none;display:inline-block}
+.btn-dir{background:#007aff;color:#fff;flex:1}.btn-dir-alt{background:#34a853;color:#fff;flex:1}
+.disposition-panel{padding:0 12px 8px}
+.disp-toggle{display:inline-block;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;background:var(--bg);color:var(--sub);cursor:pointer;list-style:none;-webkit-appearance:none}
+.disp-toggle::-webkit-details-marker{display:none}.disp-toggle::marker{display:none;content:''}
+details[open] .disp-toggle{background:#e8f0fe;color:#007aff}
+.disp-content{padding:8px 0}
+.disp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.chip-wrap{display:inline-block;cursor:pointer}
+.chip{display:inline-block;padding:8px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:#fff;color:var(--text);-webkit-user-select:none;transition:all .15s}
+.disp-radio:checked+.chip-lit{border-color:#5856d6;background:#eeeeff;color:#4240a8}
+.disp-radio:checked+.chip-pos{border-color:#34c759;background:#e8f8ee;color:#1b8a3a}
+.disp-radio:checked+.chip-unc{border-color:#8e8e93;background:#f2f2f7;color:#636366}
+.disp-radio:checked+.chip-neg{border-color:#ff3b30;background:#ffeeed;color:#d63028}
+.disp-radio:checked+.chip-vol{border-color:#ff9500;background:#fff5e6;color:#c67700}
+.disp-radio:checked+.chip-nh{border-color:#636366;background:#f2f2f2;color:#444}
+.notes-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:16px;font-family:inherit;resize:none;background:var(--bg);-webkit-appearance:none;margin-bottom:8px}
+.btn-submit{background:var(--blue);color:#fff;width:100%;padding:12px;font-size:15px;font-weight:600;border-radius:10px}
+.btn-submit:active{opacity:.8}
+.submitted-badge{display:none;position:absolute;top:12px;right:12px;background:var(--green);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px}
+.offline-q{display:none;padding:8px 12px;font-size:12px;color:#c67700;background:#fff5e6;text-align:center}
+.vol-bar{background:var(--card);padding:10px 16px;margin:0 12px 6px;border-radius:10px;font-size:13px}
+.vol-bar input{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:16px;width:100%;margin-top:4px;-webkit-appearance:none}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>Turf 041: THORNTON 80229 (MILWAUKEE–RUSSELL)</h1>
+  <p>58 doors · 70 voters</p>
+  <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  <div class="prog-text" id="progText">0 / 58 submitted</div>
+</div>
+<div class="vol-bar">
+  <label for="volName"><strong>Your name:</strong></label>
+  <input type="text" id="volName" placeholder="Enter your name" autocomplete="name">
+</div>
+<div class="offline-q" id="offlineQ">You're offline. Responses are queued and will sync when you reconnect.</div>
+
+        <div class="stop" id="stop-1" data-stop="1" data-addr="9797 MILWAUKEE CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">1</div>
+            <div class="stop-info">
+              <div class="stop-addr">9797 MILWAUKEE CT</div>
+              <div class="voter-row" data-name="Melody Carper">
+              <span class="voter-name">Melody Carper</span>
+              <span class="voter-detail">age 63 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9797%20MILWAUKEE%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9797%20MILWAUKEE%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-1" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-1"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="1">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-1">Submitted</div>
+        </div>
+        <div class="stop" id="stop-2" data-stop="2" data-addr="10372 MILWAUKEE CIR" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">2</div>
+            <div class="stop-info">
+              <div class="stop-addr">10372 MILWAUKEE CIR</div>
+              <div class="voter-row" data-name="Mark Wilson">
+              <span class="voter-name">Mark Wilson</span>
+              <span class="voter-detail">age 70 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=10372%20MILWAUKEE%20CIR%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=10372%20MILWAUKEE%20CIR%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-2" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-2"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="2">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-2">Submitted</div>
+        </div>
+        <div class="stop" id="stop-3" data-stop="3" data-addr="8423 MONROE WAY" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">3</div>
+            <div class="stop-info">
+              <div class="stop-addr">8423 MONROE WAY</div>
+              <div class="voter-row" data-name="Alma Burns">
+              <span class="voter-name">Alma Burns</span>
+              <span class="voter-detail">age 61 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8423%20MONROE%20WAY%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8423%20MONROE%20WAY%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-3" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-3"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="3">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-3">Submitted</div>
+        </div>
+        <div class="stop" id="stop-4" data-stop="4" data-addr="9868 MONROE ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">4</div>
+            <div class="stop-info">
+              <div class="stop-addr">9868 MONROE ST</div>
+              <div class="voter-row" data-name="Larry Rothe">
+              <span class="voter-name">Larry Rothe</span>
+              <span class="voter-detail">age 71 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Michele Rothe">
+              <span class="voter-name">Michele Rothe</span>
+              <span class="voter-detail">age 69 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9868%20MONROE%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9868%20MONROE%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-4" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-4"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="4">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-4">Submitted</div>
+        </div>
+        <div class="stop" id="stop-5" data-stop="5" data-addr="9191 MYRNA PL" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">5</div>
+            <div class="stop-info">
+              <div class="stop-addr">9191 MYRNA PL</div>
+              <div class="voter-row" data-name="Sandra Neufeld">
+              <span class="voter-name">Sandra Neufeld</span>
+              <span class="voter-detail">age 78 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9191%20MYRNA%20PL%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9191%20MYRNA%20PL%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-5" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-5"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="5">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-5">Submitted</div>
+        </div>
+        <div class="stop" id="stop-6" data-stop="6" data-addr="9211 MYRNA PL" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">6</div>
+            <div class="stop-info">
+              <div class="stop-addr">9211 MYRNA PL</div>
+              <div class="voter-row" data-name="Anna Ayala">
+              <span class="voter-name">Anna Ayala</span>
+              <span class="voter-detail">age 69 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Rodney Ayala">
+              <span class="voter-name">Rodney Ayala</span>
+              <span class="voter-detail">age 67 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9211%20MYRNA%20PL%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9211%20MYRNA%20PL%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-6" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-6"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="6">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-6">Submitted</div>
+        </div>
+        <div class="stop" id="stop-7" data-stop="7" data-addr="1464 NUEVA VISTA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">7</div>
+            <div class="stop-info">
+              <div class="stop-addr">1464 NUEVA VISTA DR</div>
+              <div class="voter-row" data-name="Nancy Carrasco">
+              <span class="voter-name">Nancy Carrasco</span>
+              <span class="voter-detail">age 69 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Manuel Carrasco">
+              <span class="voter-name">Manuel Carrasco</span>
+              <span class="voter-detail">age 66 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1464%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1464%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-7" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-7"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="7">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-7">Submitted</div>
+        </div>
+        <div class="stop" id="stop-8" data-stop="8" data-addr="1524 NUEVA VISTA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">8</div>
+            <div class="stop-info">
+              <div class="stop-addr">1524 NUEVA VISTA DR</div>
+              <div class="voter-row" data-name="Norbert Braun">
+              <span class="voter-name">Norbert Braun</span>
+              <span class="voter-detail">age 75 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1524%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1524%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-8" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-8"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="8">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-8">Submitted</div>
+        </div>
+        <div class="stop" id="stop-9" data-stop="9" data-addr="8351 NUEVA VISTA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">9</div>
+            <div class="stop-info">
+              <div class="stop-addr">8351 NUEVA VISTA DR</div>
+              <div class="voter-row" data-name="Gerald Hernandez">
+              <span class="voter-name">Gerald Hernandez</span>
+              <span class="voter-detail">age 85 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8351%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8351%20NUEVA%20VISTA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-9" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-9"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="9">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-9">Submitted</div>
+        </div>
+        <div class="stop" id="stop-10" data-stop="10" data-addr="1590 OAK PL" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">10</div>
+            <div class="stop-info">
+              <div class="stop-addr">1590 OAK PL</div>
+              <div class="voter-row" data-name="Maryann Ortega">
+              <span class="voter-name">Maryann Ortega</span>
+              <span class="voter-detail">age 83 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1590%20OAK%20PL%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1590%20OAK%20PL%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-10" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-10"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="10">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-10">Submitted</div>
+        </div>
+        <div class="stop" id="stop-11" data-stop="11" data-addr="2220 OAK PL" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">11</div>
+            <div class="stop-info">
+              <div class="stop-addr">2220 OAK PL</div>
+              <div class="voter-row" data-name="Beverly Henske">
+              <span class="voter-name">Beverly Henske</span>
+              <span class="voter-detail">age 88 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=2220%20OAK%20PL%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=2220%20OAK%20PL%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-11" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-11"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="11">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-11">Submitted</div>
+        </div>
+        <div class="stop" id="stop-12" data-stop="12" data-addr="7956 OGDEN CT" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">12</div>
+            <div class="stop-info">
+              <div class="stop-addr">7956 OGDEN CT</div>
+              <div class="voter-row" data-name="Rebecca Lawson">
+              <span class="voter-name">Rebecca Lawson</span>
+              <span class="voter-detail">age 35 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7956%20OGDEN%20CT%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7956%20OGDEN%20CT%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-12" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-12"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="12">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-12">Submitted</div>
+        </div>
+        <div class="stop" id="stop-13" data-stop="13" data-addr="8351 OGDEN ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">13</div>
+            <div class="stop-info">
+              <div class="stop-addr">8351 OGDEN ST</div>
+              <div class="voter-row" data-name="Kimberly Trombetta">
+              <span class="voter-name">Kimberly Trombetta</span>
+              <span class="voter-detail">age 44 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Nick Trombetta">
+              <span class="voter-name">Nick Trombetta</span>
+              <span class="voter-detail">age 44 · male · 4 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8351%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8351%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-13" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-13"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="13">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-13">Submitted</div>
+        </div>
+        <div class="stop" id="stop-14" data-stop="14" data-addr="8371 OGDEN ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">14</div>
+            <div class="stop-info">
+              <div class="stop-addr">8371 OGDEN ST</div>
+              <div class="voter-row" data-name="Joe Carpio">
+              <span class="voter-name">Joe Carpio</span>
+              <span class="voter-detail">age 88 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8371%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8371%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-14" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-14"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="14">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-14">Submitted</div>
+        </div>
+        <div class="stop" id="stop-15" data-stop="15" data-addr="8651 OGDEN ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">15</div>
+            <div class="stop-info">
+              <div class="stop-addr">8651 OGDEN ST</div>
+              <div class="voter-row" data-name="Lorna Yeager">
+              <span class="voter-name">Lorna Yeager</span>
+              <span class="voter-detail">age 78 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8651%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8651%20OGDEN%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-15" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-15"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="15">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-15">Submitted</div>
+        </div>
+        <div class="stop" id="stop-16" data-stop="16" data-addr="9060 OGDEN ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">16</div>
+            <div class="stop-info">
+              <div class="stop-addr">9060 OGDEN ST</div>
+              <div class="voter-row" data-name="Patrick Ortibez">
+              <span class="voter-name">Patrick Ortibez</span>
+              <span class="voter-detail">age 79 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9060%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9060%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-16" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-16"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="16">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-16">Submitted</div>
+        </div>
+        <div class="stop" id="stop-17" data-stop="17" data-addr="9101 OGDEN ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">17</div>
+            <div class="stop-info">
+              <div class="stop-addr">9101 OGDEN ST</div>
+              <div class="voter-row" data-name="Joyce Alvarado">
+              <span class="voter-name">Joyce Alvarado</span>
+              <span class="voter-detail">age 70 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9101%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9101%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-17" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-17"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="17">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-17">Submitted</div>
+        </div>
+        <div class="stop" id="stop-18" data-stop="18" data-addr="9161 OGDEN ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">18</div>
+            <div class="stop-info">
+              <div class="stop-addr">9161 OGDEN ST</div>
+              <div class="voter-row" data-name="Marcia Hunsaker">
+              <span class="voter-name">Marcia Hunsaker</span>
+              <span class="voter-detail">age 69 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Natasha Hunsaker">
+              <span class="voter-name">Natasha Hunsaker</span>
+              <span class="voter-detail">age 57 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9161%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9161%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-18" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-18"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="18">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-18">Submitted</div>
+        </div>
+        <div class="stop" id="stop-19" data-stop="19" data-addr="9642 OGDEN CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">19</div>
+            <div class="stop-info">
+              <div class="stop-addr">9642 OGDEN CT</div>
+              <div class="voter-row" data-name="Harriett Beasley">
+              <span class="voter-name">Harriett Beasley</span>
+              <span class="voter-detail">age 68 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9642%20OGDEN%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9642%20OGDEN%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-19" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-19"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="19">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-19">Submitted</div>
+        </div>
+        <div class="stop" id="stop-20" data-stop="20" data-addr="9742 OGDEN ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">20</div>
+            <div class="stop-info">
+              <div class="stop-addr">9742 OGDEN ST</div>
+              <div class="voter-row" data-name="Jeffery Wright">
+              <span class="voter-name">Jeffery Wright</span>
+              <span class="voter-detail">age 69 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Kim Wright">
+              <span class="voter-name">Kim Wright</span>
+              <span class="voter-detail">age 68 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9742%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9742%20OGDEN%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-20" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-20"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="20">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-20">Submitted</div>
+        </div>
+        <div class="stop" id="stop-21" data-stop="21" data-addr="9271 PALO VERDE ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">21</div>
+            <div class="stop-info">
+              <div class="stop-addr">9271 PALO VERDE ST</div>
+              <div class="voter-row" data-name="Allison Sorber">
+              <span class="voter-name">Allison Sorber</span>
+              <span class="voter-detail">age 46 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9271%20PALO%20VERDE%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9271%20PALO%20VERDE%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-21" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-21"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="21">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-21">Submitted</div>
+        </div>
+        <div class="stop" id="stop-22" data-stop="22" data-addr="7809 PATRICIA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">22</div>
+            <div class="stop-info">
+              <div class="stop-addr">7809 PATRICIA DR</div>
+              <div class="voter-row" data-name="Pandora Montoya">
+              <span class="voter-name">Pandora Montoya</span>
+              <span class="voter-detail">age 71 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7809%20PATRICIA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7809%20PATRICIA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-22" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-22"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="22">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-22">Submitted</div>
+        </div>
+        <div class="stop" id="stop-23" data-stop="23" data-addr="7939 PATRICIA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">23</div>
+            <div class="stop-info">
+              <div class="stop-addr">7939 PATRICIA DR</div>
+              <div class="voter-row" data-name="Jorge Loria">
+              <span class="voter-name">Jorge Loria</span>
+              <span class="voter-detail">age 59 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Tracy Loria">
+              <span class="voter-name">Tracy Loria</span>
+              <span class="voter-detail">age 26 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7939%20PATRICIA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7939%20PATRICIA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-23" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-23"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="23">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-23">Submitted</div>
+        </div>
+        <div class="stop" id="stop-24" data-stop="24" data-addr="8148 PEARL ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">24</div>
+            <div class="stop-info">
+              <div class="stop-addr">8148 PEARL ST</div>
+              <div class="voter-row" data-name="Irvin Alfaro Miranda">
+              <span class="voter-name">Irvin Alfaro Miranda</span>
+              <span class="voter-detail">age 25 · male · 4 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8148%20PEARL%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8148%20PEARL%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-24" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-24"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="24">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-24">Submitted</div>
+        </div>
+        <div class="stop" id="stop-25" data-stop="25" data-addr="8751 PEARL ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">25</div>
+            <div class="stop-info">
+              <div class="stop-addr">8751 PEARL ST</div>
+              <div class="voter-row" data-name="Davida Ashley">
+              <span class="voter-name">Davida Ashley</span>
+              <span class="voter-detail">age 55 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8751%20PEARL%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8751%20PEARL%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-25" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-25"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="25">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-25">Submitted</div>
+        </div>
+        <div class="stop" id="stop-26" data-stop="26" data-addr="7875 PENNSYLVANIA ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">26</div>
+            <div class="stop-info">
+              <div class="stop-addr">7875 PENNSYLVANIA ST</div>
+              <div class="voter-row" data-name="Eufrosina Duran">
+              <span class="voter-name">Eufrosina Duran</span>
+              <span class="voter-detail">age 84 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7875%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7875%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-26" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-26"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="26">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-26">Submitted</div>
+        </div>
+        <div class="stop" id="stop-27" data-stop="27" data-addr="7945 PENNSYLVANIA ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">27</div>
+            <div class="stop-info">
+              <div class="stop-addr">7945 PENNSYLVANIA ST</div>
+              <div class="voter-row" data-name="Linda Martinez">
+              <span class="voter-name">Linda Martinez</span>
+              <span class="voter-detail">age 78 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7945%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7945%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-27" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-27"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="27">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-27">Submitted</div>
+        </div>
+        <div class="stop" id="stop-28" data-stop="28" data-addr="7975 PENNSYLVANIA ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">28</div>
+            <div class="stop-info">
+              <div class="stop-addr">7975 PENNSYLVANIA ST</div>
+              <div class="voter-row" data-name="Frank Guerrero">
+              <span class="voter-name">Frank Guerrero</span>
+              <span class="voter-detail">age 82 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Theresa Guerrero">
+              <span class="voter-name">Theresa Guerrero</span>
+              <span class="voter-detail">age 80 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7975%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7975%20PENNSYLVANIA%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-28" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-28"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="28">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-28">Submitted</div>
+        </div>
+        <div class="stop" id="stop-29" data-stop="29" data-addr="1480 PHOENIX CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">29</div>
+            <div class="stop-info">
+              <div class="stop-addr">1480 PHOENIX CT</div>
+              <div class="voter-row" data-name="James Steward">
+              <span class="voter-name">James Steward</span>
+              <span class="voter-detail">age 85 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1480%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1480%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-29" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-29"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="29">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-29">Submitted</div>
+        </div>
+        <div class="stop" id="stop-30" data-stop="30" data-addr="1521 PHOENIX CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">30</div>
+            <div class="stop-info">
+              <div class="stop-addr">1521 PHOENIX CT</div>
+              <div class="voter-row" data-name="Leonard Brandt">
+              <span class="voter-name">Leonard Brandt</span>
+              <span class="voter-detail">age 84 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1521%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1521%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-30" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-30"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="30">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-30">Submitted</div>
+        </div>
+        <div class="stop" id="stop-31" data-stop="31" data-addr="1560 PHOENIX CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">31</div>
+            <div class="stop-info">
+              <div class="stop-addr">1560 PHOENIX CT</div>
+              <div class="voter-row" data-name="Jeanette Taylor">
+              <span class="voter-name">Jeanette Taylor</span>
+              <span class="voter-detail">age 86 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1560%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1560%20PHOENIX%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-31" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-31"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="31">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-31">Submitted</div>
+        </div>
+        <div class="stop" id="stop-32" data-stop="32" data-addr="2090 POZE BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">32</div>
+            <div class="stop-info">
+              <div class="stop-addr">2090 POZE BLVD</div>
+              <div class="voter-row" data-name="Patrick Racette">
+              <span class="voter-name">Patrick Racette</span>
+              <span class="voter-detail">age 58 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Sandra Racette">
+              <span class="voter-name">Sandra Racette</span>
+              <span class="voter-detail">age 60 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=2090%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=2090%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-32" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-32"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="32">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-32">Submitted</div>
+        </div>
+        <div class="stop" id="stop-33" data-stop="33" data-addr="8971 POZE BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">33</div>
+            <div class="stop-info">
+              <div class="stop-addr">8971 POZE BLVD</div>
+              <div class="voter-row" data-name="Dawn Meyer">
+              <span class="voter-name">Dawn Meyer</span>
+              <span class="voter-detail">age 64 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8971%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8971%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-33" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-33"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="33">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-33">Submitted</div>
+        </div>
+        <div class="stop" id="stop-34" data-stop="34" data-addr="9040 POZE BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">34</div>
+            <div class="stop-info">
+              <div class="stop-addr">9040 POZE BLVD</div>
+              <div class="voter-row" data-name="Wanda Marshall">
+              <span class="voter-name">Wanda Marshall</span>
+              <span class="voter-detail">age 83 · female · 5 primaries</span>
+            </div><div class="voter-row" data-name="Robert Marshall">
+              <span class="voter-name">Robert Marshall</span>
+              <span class="voter-detail">age 79 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9040%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9040%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-34" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-34"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="34">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-34">Submitted</div>
+        </div>
+        <div class="stop" id="stop-35" data-stop="35" data-addr="9050 POZE BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">35</div>
+            <div class="stop-info">
+              <div class="stop-addr">9050 POZE BLVD</div>
+              <div class="voter-row" data-name="Alex Lopez">
+              <span class="voter-name">Alex Lopez</span>
+              <span class="voter-detail">age 86 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Patricia Hernandez">
+              <span class="voter-name">Patricia Hernandez</span>
+              <span class="voter-detail">age 82 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9050%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9050%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-35" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-35"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="35">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-35">Submitted</div>
+        </div>
+        <div class="stop" id="stop-36" data-stop="36" data-addr="9055 POZE BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">36</div>
+            <div class="stop-info">
+              <div class="stop-addr">9055 POZE BLVD</div>
+              <div class="voter-row" data-name="Jesus Minjares">
+              <span class="voter-name">Jesus Minjares</span>
+              <span class="voter-detail">age 62 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9055%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9055%20POZE%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-36" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-36"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="36">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-36">Submitted</div>
+        </div>
+        <div class="stop" id="stop-37" data-stop="37" data-addr="1570 PUEBLO CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">37</div>
+            <div class="stop-info">
+              <div class="stop-addr">1570 PUEBLO CT</div>
+              <div class="voter-row" data-name="Laura Marks">
+              <span class="voter-name">Laura Marks</span>
+              <span class="voter-detail">age 40 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1570%20PUEBLO%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1570%20PUEBLO%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-37" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-37"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="37">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-37">Submitted</div>
+        </div>
+        <div class="stop" id="stop-38" data-stop="38" data-addr="1623 QUIVIRA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">38</div>
+            <div class="stop-info">
+              <div class="stop-addr">1623 QUIVIRA DR</div>
+              <div class="voter-row" data-name="Jesse Perez">
+              <span class="voter-name">Jesse Perez</span>
+              <span class="voter-detail">age 70 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1623%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1623%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-38" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-38"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="38">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-38">Submitted</div>
+        </div>
+        <div class="stop" id="stop-39" data-stop="39" data-addr="1642 QUIVIRA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">39</div>
+            <div class="stop-info">
+              <div class="stop-addr">1642 QUIVIRA DR</div>
+              <div class="voter-row" data-name="Carolyn Dewitt">
+              <span class="voter-name">Carolyn Dewitt</span>
+              <span class="voter-detail">age 88 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1642%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1642%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-39" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-39"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="39">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-39">Submitted</div>
+        </div>
+        <div class="stop" id="stop-40" data-stop="40" data-addr="8301 QUIVIRA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">40</div>
+            <div class="stop-info">
+              <div class="stop-addr">8301 QUIVIRA DR</div>
+              <div class="voter-row" data-name="Sharon Hobbs">
+              <span class="voter-name">Sharon Hobbs</span>
+              <span class="voter-detail">age 83 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8301%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8301%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-40" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-40"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="40">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-40">Submitted</div>
+        </div>
+        <div class="stop" id="stop-41" data-stop="41" data-addr="8361 QUIVIRA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">41</div>
+            <div class="stop-info">
+              <div class="stop-addr">8361 QUIVIRA DR</div>
+              <div class="voter-row" data-name="Jennifer Baragary">
+              <span class="voter-name">Jennifer Baragary</span>
+              <span class="voter-detail">age 43 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8361%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8361%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-41" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-41"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="41">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-41">Submitted</div>
+        </div>
+        <div class="stop" id="stop-42" data-stop="42" data-addr="8371 QUIVIRA DR" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">42</div>
+            <div class="stop-info">
+              <div class="stop-addr">8371 QUIVIRA DR</div>
+              <div class="voter-row" data-name="Janice Vigil">
+              <span class="voter-name">Janice Vigil</span>
+              <span class="voter-detail">age 70 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8371%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8371%20QUIVIRA%20DR%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-42" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-42"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="42">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-42">Submitted</div>
+        </div>
+        <div class="stop" id="stop-43" data-stop="43" data-addr="7340 RACE ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">43</div>
+            <div class="stop-info">
+              <div class="stop-addr">7340 RACE ST</div>
+              <div class="voter-row" data-name="George Mazzotti">
+              <span class="voter-name">George Mazzotti</span>
+              <span class="voter-detail">age 73 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7340%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7340%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-43" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-43"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="43">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-43">Submitted</div>
+        </div>
+        <div class="stop" id="stop-44" data-stop="44" data-addr="7403 RACE ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">44</div>
+            <div class="stop-info">
+              <div class="stop-addr">7403 RACE ST</div>
+              <div class="voter-row" data-name="Steven Odorisio">
+              <span class="voter-name">Steven Odorisio</span>
+              <span class="voter-detail">age 50 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=7403%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=7403%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-44" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-44"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="44">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-44">Submitted</div>
+        </div>
+        <div class="stop" id="stop-45" data-stop="45" data-addr="8230 RACE ST" data-city="DENVER" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">45</div>
+            <div class="stop-info">
+              <div class="stop-addr">8230 RACE ST</div>
+              <div class="voter-row" data-name="Isaac Sims">
+              <span class="voter-name">Isaac Sims</span>
+              <span class="voter-detail">age 83 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8230%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8230%20RACE%20ST%2C%20DENVER%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-45" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-45"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="45">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-45">Submitted</div>
+        </div>
+        <div class="stop" id="stop-46" data-stop="46" data-addr="8881 RACE ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">46</div>
+            <div class="stop-info">
+              <div class="stop-addr">8881 RACE ST</div>
+              <div class="voter-row" data-name="John Martinez">
+              <span class="voter-name">John Martinez</span>
+              <span class="voter-detail">age 57 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=8881%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=8881%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-46" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-46"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="46">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-46">Submitted</div>
+        </div>
+        <div class="stop" id="stop-47" data-stop="47" data-addr="9607 RACE WAY" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">47</div>
+            <div class="stop-info">
+              <div class="stop-addr">9607 RACE WAY</div>
+              <div class="voter-row" data-name="Wanda Abbott">
+              <span class="voter-name">Wanda Abbott</span>
+              <span class="voter-detail">age 79 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9607%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9607%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-47" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-47"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="47">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-47">Submitted</div>
+        </div>
+        <div class="stop" id="stop-48" data-stop="48" data-addr="9663 RACE WAY" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">48</div>
+            <div class="stop-info">
+              <div class="stop-addr">9663 RACE WAY</div>
+              <div class="voter-row" data-name="Geraldine Fierro">
+              <span class="voter-name">Geraldine Fierro</span>
+              <span class="voter-detail">age 74 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9663%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9663%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-48" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-48"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="48">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-48">Submitted</div>
+        </div>
+        <div class="stop" id="stop-49" data-stop="49" data-addr="9676 RACE WAY" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">49</div>
+            <div class="stop-info">
+              <div class="stop-addr">9676 RACE WAY</div>
+              <div class="voter-row" data-name="Arthur Perea">
+              <span class="voter-name">Arthur Perea</span>
+              <span class="voter-detail">age 69 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9676%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9676%20RACE%20WAY%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-49" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-49"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="49">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-49">Submitted</div>
+        </div>
+        <div class="stop" id="stop-50" data-stop="50" data-addr="9717 RACE ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">50</div>
+            <div class="stop-info">
+              <div class="stop-addr">9717 RACE ST</div>
+              <div class="voter-row" data-name="Peter Hoffman">
+              <span class="voter-name">Peter Hoffman</span>
+              <span class="voter-detail">age 83 · male · 5 primaries</span>
+            </div><div class="voter-row" data-name="Ruby Hoffman">
+              <span class="voter-name">Ruby Hoffman</span>
+              <span class="voter-detail">age 81 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9717%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9717%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-50" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-50"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="50">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-50">Submitted</div>
+        </div>
+        <div class="stop" id="stop-51" data-stop="51" data-addr="9767 RACE ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">51</div>
+            <div class="stop-info">
+              <div class="stop-addr">9767 RACE ST</div>
+              <div class="voter-row" data-name="Manuel Urenda">
+              <span class="voter-name">Manuel Urenda</span>
+              <span class="voter-detail">age 59 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9767%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9767%20RACE%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-51" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-51"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="51">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-51">Submitted</div>
+        </div>
+        <div class="stop" id="stop-52" data-stop="52" data-addr="10201 RIVERDALE RD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">52</div>
+            <div class="stop-info">
+              <div class="stop-addr">10201 RIVERDALE RD</div>
+              <div class="voter-row" data-name="Patricia Blauser">
+              <span class="voter-name">Patricia Blauser</span>
+              <span class="voter-detail">age 73 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=10201%20RIVERDALE%20RD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=10201%20RIVERDALE%20RD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-52" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-52"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="52">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-52">Submitted</div>
+        </div>
+        <div class="stop" id="stop-53" data-stop="53" data-addr="2730 ROOSEVELT AVE" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">53</div>
+            <div class="stop-info">
+              <div class="stop-addr">2730 ROOSEVELT AVE</div>
+              <div class="voter-row" data-name="Jennifer Garcia">
+              <span class="voter-name">Jennifer Garcia</span>
+              <span class="voter-detail">age 41 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=2730%20ROOSEVELT%20AVE%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=2730%20ROOSEVELT%20AVE%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-53" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-53"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="53">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-53">Submitted</div>
+        </div>
+        <div class="stop" id="stop-54" data-stop="54" data-addr="9321 ROSE CT" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">54</div>
+            <div class="stop-info">
+              <div class="stop-addr">9321 ROSE CT</div>
+              <div class="voter-row" data-name="Timothy Wienecke">
+              <span class="voter-name">Timothy Wienecke</span>
+              <span class="voter-detail">age 46 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=9321%20ROSE%20CT%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=9321%20ROSE%20CT%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-54" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-54"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="54">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-54">Submitted</div>
+        </div>
+        <div class="stop" id="stop-55" data-stop="55" data-addr="1120 ROWENA ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">55</div>
+            <div class="stop-info">
+              <div class="stop-addr">1120 ROWENA ST</div>
+              <div class="voter-row" data-name="Max Pacheco">
+              <span class="voter-name">Max Pacheco</span>
+              <span class="voter-detail">age 68 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1120%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1120%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-55" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-55"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="55">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-55">Submitted</div>
+        </div>
+        <div class="stop" id="stop-56" data-stop="56" data-addr="1380 ROWENA ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">56</div>
+            <div class="stop-info">
+              <div class="stop-addr">1380 ROWENA ST</div>
+              <div class="voter-row" data-name="Richard Mcgrath">
+              <span class="voter-name">Richard Mcgrath</span>
+              <span class="voter-detail">age 86 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1380%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1380%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-56" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-56"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="56">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-56">Submitted</div>
+        </div>
+        <div class="stop" id="stop-57" data-stop="57" data-addr="1461 ROWENA ST" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">57</div>
+            <div class="stop-info">
+              <div class="stop-addr">1461 ROWENA ST</div>
+              <div class="voter-row" data-name="David Radack">
+              <span class="voter-name">David Radack</span>
+              <span class="voter-detail">age 73 · male · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=1461%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=1461%20ROWENA%20ST%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-57" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-57"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="57">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-57">Submitted</div>
+        </div>
+        <div class="stop" id="stop-58" data-stop="58" data-addr="950 RUSSELL BLVD" data-city="THORNTON" data-zip="80229">
+          <div class="stop-header">
+            <div class="stop-num">58</div>
+            <div class="stop-info">
+              <div class="stop-addr">950 RUSSELL BLVD</div>
+              <div class="voter-row" data-name="Sheri Hart">
+              <span class="voter-name">Sheri Hart</span>
+              <span class="voter-detail">age 67 · female · 5 primaries</span>
+            </div>
+            </div>
+          </div>
+          <div class="stop-actions">
+            <a href="https://maps.apple.com/?daddr=950%20RUSSELL%20BLVD%2C%20THORNTON%2C%20CO%2080229&dirflg=w" class="btn btn-dir" target="_blank">Apple Maps</a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=950%20RUSSELL%20BLVD%2C%20THORNTON%2C%20CO%2080229&travelmode=walking" class="btn btn-dir-alt" target="_blank">Google Maps</a>
+          </div>
+          <details class="disposition-panel">
+            <summary class="disp-toggle">Record Result</summary>
+            <div class="disp-content">
+              <div class="disp-chips">
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Lit Drop" class="sr-only disp-radio"><span class="chip chip-lit">Lit Drop</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Positive" class="sr-only disp-radio"><span class="chip chip-pos">Positive</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Uncommitted" class="sr-only disp-radio"><span class="chip chip-unc">Uncommitted</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Negative" class="sr-only disp-radio"><span class="chip chip-neg">Negative</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Wants to Volunteer" class="sr-only disp-radio"><span class="chip chip-vol">Wants to Volunteer</span></label>
+                <label class="chip-wrap"><input type="radio" name="disp-58" value="Not Home" class="sr-only disp-radio"><span class="chip chip-nh">Not Home</span></label>
+              </div>
+              <textarea class="notes-input" placeholder="Notes..." rows="2" id="notes-58"></textarea>
+              <button type="button" class="btn btn-submit" data-stop="58">Submit &amp; Next</button>
+            </div>
+          </details>
+          <div class="submitted-badge" id="badge-58">Submitted</div>
+        </div>
+<script>
+(function(){
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHR8q9BnrfrsZ8RGqdaUwhacwSbo1XMTJWEdXcfrgpYlEteB0AfqtGOQQnIEkKMPPU/exec";
+  var TURF_ID = 41;
+  var TURF_NAME = "Turf 041: THORNTON 80229 (MILWAUKEE–RUSSELL)";
+  var TOTAL = 58;
+  var submitted = new Set();
+
+  function getVolunteer(){ return document.getElementById("volName").value.trim() || "Unknown"; }
+
+  function updateProgress(){
+    var pct = (submitted.size / TOTAL) * 100;
+    document.getElementById("progFill").style.width = pct + "%";
+    document.getElementById("progText").textContent = submitted.size + " / " + TOTAL + " submitted";
+  }
+
+  function sendData(payload){
+    var ifr = document.createElement("iframe");
+    ifr.name = "sf_" + Math.random().toString(36).slice(2);
+    ifr.style.display = "none";
+    document.body.appendChild(ifr);
+    var form = document.createElement("form");
+    form.method = "GET";
+    form.action = SCRIPT_URL;
+    form.target = ifr.name;
+    var ai = document.createElement("input");
+    ai.type = "hidden"; ai.name = "action"; ai.value = "submit";
+    form.appendChild(ai);
+    for (var k in payload) {
+      var inp = document.createElement("input");
+      inp.type = "hidden"; inp.name = k; inp.value = payload[k];
+      form.appendChild(inp);
+    }
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(function(){ try{ifr.remove();form.remove();}catch(e){} }, 15000);
+  }
+
+
+  document.body.addEventListener("click", function(e){
+    var btn = e.target.closest(".btn-submit");
+    if (!btn) return;
+    e.preventDefault();
+    var stopNum = parseInt(btn.getAttribute("data-stop"));
+    var stopEl = document.getElementById("stop-" + stopNum);
+    var addr = stopEl.getAttribute("data-addr");
+    var city = stopEl.getAttribute("data-city");
+    var zip = stopEl.getAttribute("data-zip");
+
+    var selected = stopEl.querySelector(".disp-radio:checked");
+    var disposition = selected ? selected.value : "No Response";
+    var notes = document.getElementById("notes-" + stopNum).value.trim();
+
+    var voters = stopEl.querySelectorAll(".voter-row");
+    for (var i = 0; i < voters.length; i++) {
+      var vname = voters[i].getAttribute("data-name");
+      sendData({
+        volunteer: getVolunteer(),
+        turf_id: TURF_ID,
+        turf_name: TURF_NAME,
+        stop_num: stopNum,
+        address: addr,
+        city: city,
+        zip: zip,
+        voter_name: vname,
+        disposition: disposition,
+        notes: notes,
+        lat: "",
+        lng: ""
+      });
+    }
+
+    submitted.add(stopNum);
+    stopEl.classList.add("done");
+    var details = stopEl.querySelector("details");
+    if (details) details.removeAttribute("open");
+    updateProgress();
+
+    var next = stopNum + 1;
+    while (next <= TOTAL && submitted.has(next)) next++;
+    if (next <= TOTAL) {
+      setTimeout(function(){
+        document.getElementById("stop-" + next).scrollIntoView({behavior:"smooth",block:"center"});
+      }, 300);
+    }
+  });
+})();
+</script>
+</body>
+</html>
