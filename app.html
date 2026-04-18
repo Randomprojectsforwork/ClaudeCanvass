@@ -106,6 +106,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
              margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; cursor: pointer; border: none; width: 100%; }
 .btn-drive { background: #007bff; color: white; padding: 10px 20px; font-size: 14px; display: block;
               margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; }
+.route-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7);
+                  z-index:200; overflow-y:auto; padding:10px; }
+.route-overlay.show { display:block; }
+.route-list { background:white; border-radius:10px; padding:15px; max-width:500px; margin:0 auto; }
+.route-list h3 { color:#1B4332; margin-bottom:10px; font-size:16px; }
+.route-list .close-btn { float:right; background:#dc3545; color:white; border:none; border-radius:6px;
+                          padding:6px 12px; cursor:pointer; font-size:13px; font-weight:600; }
+.route-stop { display:flex; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid #eee; font-size:13px; }
+.route-stop .rs-num { background:#1B4332; color:white; width:24px; height:24px; border-radius:50%;
+                       display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; flex-shrink:0; }
+.route-stop .rs-addr { flex:1; }
+.route-stop .rs-walk { color:#666; font-size:11px; white-space:nowrap; }
+.route-stop.rs-done .rs-num { background:#28a745; }
+.route-stop.rs-done .rs-addr { color:#999; text-decoration:line-through; }
 </style>
 </head>
 <body>
@@ -151,7 +165,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <div><div class="num" id="statDPH">&mdash;</div>D/Hr</div>
     </div>
     <div class="action-bar">
-      <a id="btnRoute" href="#" target="_blank" class="btn-route">Full Route</a>
+      <a id="btnRoute" href="#" target="_blank" class="btn-route">Route Map</a>
+      <button class="btn-route" style="background:#17a2b8" id="btnRouteList" onclick="showRouteOverview()">All Stops</button>
       <button class="btn-start" id="btnStart" onclick="startSession()">Start</button>
       <button class="btn-pause" id="btnPause" onclick="pauseSession()">Pause</button>
       <button class="btn-dash" onclick="showDashboard()">Dashboard</button>
@@ -368,7 +383,8 @@ function loadTurf(tid) {
   document.getElementById('tvSubtitle').textContent = t.n + ' doors · Turf ' + t.tid + ' · ';
   document.getElementById('timerSpan') && (document.getElementById('timerSpan').textContent = '');
   document.getElementById('btnRoute').href = t.route_url;
-  document.getElementById('routeNote').textContent = t.route_note + ' on Google Maps';
+  var routeMsg = t.n > 25 ? 'First ~25 stops shown on Google Maps (route has ' + t.n + ' total)' : t.route_note + ' on Google Maps';
+  document.getElementById('routeNote').textContent = routeMsg;
   document.getElementById('btnStart').style.display = 'block';
   document.getElementById('btnPause').style.display = 'none';
   document.getElementById('resumeBanner').style.display = 'none';
@@ -654,6 +670,32 @@ window.addEventListener('popstate', function() {
   if (t && TURFS[t]) loadTurf(t);
   else showDashboard();
 });
+
+// ===== ROUTE OVERVIEW =====
+function showRouteOverview() {
+  if (!currentTurf) return;
+  var t = currentTurf;
+  var html = '<button class="close-btn" onclick="closeRouteOverview()">Close</button>';
+  html += '<h3>All ' + t.n + ' Stops — Turf ' + t.tid + '</h3>';
+  t.addrs.forEach(function(a) {
+    var doneClass = doorStatus[a.s] ? ' rs-done' : '';
+    var walkText = a.s === 1 ? 'START' : a.w + 'm walk';
+    html += '<div class="route-stop' + doneClass + '">';
+    html += '<span class="rs-num">' + a.s + '</span>';
+    html += '<span class="rs-addr">' + a.a + '</span>';
+    html += '<span class="rs-walk">' + walkText + '</span>';
+    html += '</div>';
+  });
+  document.getElementById('routeOverlay').innerHTML = '<div class="route-list">' + html + '</div>';
+  document.getElementById('routeOverlay').classList.add('show');
+}
+
+function closeRouteOverview() {
+  document.getElementById('routeOverlay').classList.remove('show');
+}
 </script>
+
+<div class="route-overlay" id="routeOverlay" onclick="if(event.target===this)closeRouteOverview()"></div>
+
 </body>
 </html>

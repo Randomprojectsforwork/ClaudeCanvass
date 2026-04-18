@@ -510,6 +510,7 @@
     // CONFIG
     // ============================================================================
     var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjBGtakc05SnyMWSMfgvhR92uxE-NdWQwlk0RYKQ3-lse03BUyif-NUtpgUvgfoc4r/exec';
+    var BASE_URL = 'https://randomprojectsforwork.github.io/ClaudeCanvass/';
 
     var SESSIONS = [
       {"session":1,"total_doors":72,"total_voters":111,"turfs":[
@@ -625,13 +626,8 @@
       return code;
     }
 
-    function assignTurf(turfKey, turfName, volunteerInput) {
-      var volName = volunteerInput.value.trim();
-      if (!volName) {
-        alert('Please enter a volunteer name');
-        return;
-      }
-      volunteerInput.disabled = true;
+    function assignTurf(turfKey, turfName, volName) {
+      if (!volName) return;
       sendData({
         action: 'assign',
         turf_id: turfKey,
@@ -639,19 +635,32 @@
         turf_name: turfName
       });
       state.assignments[turfKey] = volName;
+    }
+
+    function assignSession(sessionNum) {
+      var input = document.getElementById('vol-session-' + sessionNum);
+      var volName = input.value.trim();
+      if (!volName) { alert('Please enter a volunteer name'); return; }
+      input.disabled = true;
+      var session = SESSIONS.find(function(s) { return s.session === sessionNum; });
+      session.turfs.forEach(function(t) {
+        var key = 's' + sessionNum + '_t' + t.tid;
+        assignTurf(key, 'Session ' + sessionNum + ' Turf ' + t.tid, volName);
+      });
       setTimeout(function() {
         renderAssignmentPanel();
         updateStats();
-        volunteerInput.disabled = false;
-      }, 500);
+        input.disabled = false;
+      }, 800);
     }
 
-    function unassignTurf(turfKey, turfName) {
-      sendData({
-        action: 'unassign',
-        turf_id: turfKey
+    function unassignSession(sessionNum) {
+      var session = SESSIONS.find(function(s) { return s.session === sessionNum; });
+      session.turfs.forEach(function(t) {
+        var key = 's' + sessionNum + '_t' + t.tid;
+        sendData({ action: 'unassign', turf_id: key });
+        delete state.assignments[key];
       });
-      delete state.assignments[turfKey];
       setTimeout(function() {
         renderAssignmentPanel();
         updateStats();
@@ -662,36 +671,53 @@
       var grid = document.getElementById('turf-assignment-grid');
       grid.innerHTML = '';
 
-      state.turfs.forEach(function(turf) {
-        var isAssigned = !!state.assignments[turf.key];
-        var volunteerName = state.assignments[turf.key] || '';
+      SESSIONS.forEach(function(session) {
+        var sNum = session.session;
+        var turfs = session.turfs;
+        var turfKeys = turfs.map(function(t) { return 's' + sNum + '_t' + t.tid; });
+
+        // Check assignment status for this session
+        var assignedVols = {};
+        turfKeys.forEach(function(key) {
+          if (state.assignments[key]) assignedVols[state.assignments[key]] = true;
+        });
+        var assignedNames = Object.keys(assignedVols);
+        var allAssigned = turfKeys.every(function(k) { return !!state.assignments[k]; });
 
         var card = document.createElement('div');
         card.className = 'turf-card';
 
-        var headerHTML = '<div class="turf-header"><div class="turf-id">Turf ' + turf.tid + '</div><span class="turf-session">S' + turf.session + '</span></div>';
+        // Session header
+        var headerHTML = '<div class="turf-header">' +
+          '<div class="turf-id">Session ' + sNum + '</div>' +
+          '<span class="badge ' + (allAssigned ? 'badge-assigned' : 'badge-unassigned') + '">' +
+          (allAssigned ? 'Assigned' : 'Open') + '</span></div>';
 
+        // Session info
+        var turfList = turfs.map(function(t) {
+          return 'Turf ' + t.tid + ' (' + t.doors + ' doors, ' + t.city + ' ' + t.zip + ')';
+        }).join('<br>');
         var infoHTML = '<div class="turf-info">' +
-          '<div class="turf-info-line">' + turf.city + ', ' + turf.zip + '</div>' +
-          '<div class="turf-info-line"><strong>' + turf.doors + '</strong> doors</div>' +
-          '<div class="turf-info-line">' + turf.drive + ' min drive</div>' +
+          '<div class="turf-info-line"><strong>' + session.total_doors + '</strong> total doors &middot; ' + session.total_voters + ' voters</div>' +
+          '<div class="turf-info-line" style="margin-top:6px;font-size:11px;color:#888">' + turfList + '</div>' +
           '</div>';
 
         var assignHTML = '';
-        if (isAssigned) {
-          var code = generateVolunteerCode(volunteerName);
-          var link = 'app.html?volunteer=' + encodeURIComponent(volunteerName) + '&turf=' + turf.tid;
+        if (allAssigned && assignedNames.length > 0) {
+          var volName = assignedNames[0];
+          var code = generateVolunteerCode(volName);
+          var link = BASE_URL + 'app.html?volunteer=' + encodeURIComponent(volName);
           assignHTML = '<div class="turf-assigned-volunteer">' +
-            '<div class="volunteer-name">' + volunteerName + '</div>' +
+            '<div class="volunteer-name">' + volName + '</div>' +
             '<div class="volunteer-code">Code: ' + code + '</div>' +
             '<div class="volunteer-link">' + link + '</div>' +
             '<button class="btn btn-secondary btn-small btn-copy" onclick="copyToClipboard(\'' + link.replace(/'/g, "\\'") + '\', this)">Copy Link</button>' +
             '</div>' +
-            '<button class="btn btn-secondary" style="width:100%;" onclick="unassignTurf(\'' + turf.key + '\', \'Turf ' + turf.tid + '\')">Unassign</button>';
+            '<button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="unassignSession(' + sNum + ')">Unassign Session</button>';
         } else {
           assignHTML = '<div class="turf-assign-section">' +
-            '<input type="text" class="volunteer-input" id="vol-' + turf.key + '" placeholder="Volunteer name">' +
-            '<button class="btn btn-primary" onclick="assignTurf(\'' + turf.key + '\', \'Turf ' + turf.tid + '\', document.getElementById(\'vol-' + turf.key + '\'))">Assign</button>' +
+            '<input type="text" class="volunteer-input" id="vol-session-' + sNum + '" placeholder="Volunteer name" onkeyup="if(event.key===\'Enter\')assignSession(' + sNum + ')">' +
+            '<button class="btn btn-primary" onclick="assignSession(' + sNum + ')">Assign Session</button>' +
             '</div>';
         }
 
@@ -941,8 +967,8 @@
     }
 
     // Expose for inline onclick handlers
-    window.assignTurf = assignTurf;
-    window.unassignTurf = unassignTurf;
+    window.assignSession = assignSession;
+    window.unassignSession = unassignSession;
     window.copyToClipboard = copyToClipboard;
 
     // Start
