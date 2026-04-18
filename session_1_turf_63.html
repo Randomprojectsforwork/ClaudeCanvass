@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session 1 &mdash; THORNTON 80602 (19 doors)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         background: #f5f5f5; color: #333; padding: 10px; max-width: 600px; margin: 0 auto; }
+  .header { background: #1B4332; color: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+  .header h1 { font-size: 18px; margin-bottom: 5px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .progress { background: #ddd; border-radius: 8px; height: 8px; margin: 10px 0; }
+  .progress-bar { background: #28a745; height: 8px; border-radius: 8px; width: 0%; transition: width 0.3s; }
+  .timer { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+  .stats { display: flex; justify-content: space-around; background: white; padding: 10px;
+            border-radius: 8px; margin-bottom: 10px; font-size: 13px; }
+  .stats div { text-align: center; }
+  .stats .num { font-size: 20px; font-weight: bold; color: #1B4332; }
+  .action-bar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .action-bar a, .action-bar button { flex: 1; min-width: 120px; }
+  .btn-route { background: #6F42C1; color: white; padding: 10px 14px; border-radius: 8px;
+                text-decoration: none; text-align: center; font-weight: 600; font-size: 14px; border: none; cursor: pointer; display: block; }
+  .btn-start-session { background: #28a745; color: white; padding: 10px 14px; border-radius: 8px;
+                        text-align: center; font-weight: 600; font-size: 14px; border: none; cursor: pointer; }
+  .btn-pause { background: #ffc107; color: #333; padding: 10px 14px; border-radius: 8px;
+                text-align: center; font-weight: 600; font-size: 14px; border: none; cursor: pointer; display: none; }
+  .route-note { font-size: 11px; color: #666; text-align: center; margin-bottom: 10px; }
+  .door { background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
+           border-left: 4px solid #ddd; transition: all 0.3s; }
+  .door.done { border-left-color: #28a745; opacity: 0.6; }
+  .door.done .door-actions { display: none; }
+  .door.done .door-notes { display: none; }
+  .door.active { border-left-color: #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .door-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+  .step-num { background: #1B4332; color: white; width: 28px; height: 28px; border-radius: 50%;
+               display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
+  .door.done .step-num { background: #28a745; }
+  .door-addr { font-weight: 600; font-size: 15px; }
+  .door-meta { font-size: 12px; color: #666; margin-left: 36px; margin-bottom: 8px; }
+  .door-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: 36px; }
+  .door-notes { margin: 6px 0 0 36px; }
+  .notes-input { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+  .walk-badge { color: #fff; padding: 2px 6px; border-radius: 10px; font-size: 11px; white-space: nowrap; }
+  .btn { padding: 7px 12px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;
+          text-decoration: none; text-align: center; font-weight: 500; }
+  .btn-nav { background: #007bff; color: white; }
+  .btn-contact { background: #28a745; color: white; }
+  .btn-not-home { background: #ffc107; color: #333; }
+  .btn-refused { background: #dc3545; color: white; }
+  .btn-moved { background: #6c757d; color: white; }
+  .btn-next { background: #1B4332; color: white; padding: 12px 20px; font-size: 15px; display: block; margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; }
+  .btn-drive { background: #007bff; color: white; padding: 10px 20px; font-size: 14px; display: block; margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; }
+  .door-status { margin-left: 36px; margin-top: 6px; font-size: 12px; font-weight: 600; }
+  .next-turf { background: white; border-radius: 8px; padding: 15px; margin-top: 15px;
+                border: 2px solid #1B4332; text-align: center; }
+  .next-turf h3 { color: #1B4332; margin-bottom: 5px; }
+  .resume-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px;
+                    margin-bottom: 10px; text-align: center; font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Session 1 &mdash; THORNTON 80602</h1>
+  <p>19 doors &middot; ~22 min walking &middot; Turf 410</p>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="timer" id="timerDisplay"></div>
+</div>
+
+<div class="stats">
+  <div><div class="num" id="statDoors">0</div>Knocked</div>
+  <div><div class="num" id="statContacts">0</div>Contacts</div>
+  <div><div class="num" id="statLeft">19</div>Remaining</div>
+  <div><div class="num" id="statDPH">&mdash;</div>Doors/Hr</div>
+</div>
+
+<div class="resume-banner" id="resumeBanner">
+  Resumed from previous visit &mdash; <span id="resumeCount"></span> doors already knocked
+</div>
+
+<div class="action-bar">
+  <a href="https://www.google.com/maps/dir/?api=1&origin=39.959608120438,-104.930271817438&destination=39.96034543413,-104.930518514633&travelmode=walking&waypoints=39.959824186489,-104.930971390927|39.95961938194,-104.930973919402|39.959143720012,-104.930977117172|39.958943279479,-104.930978310294|39.958010251134,-104.930422501793|39.958488897894,-104.929533631111|39.958718511279,-104.927938450941|39.958959039615,-104.927122629182|39.958319540138,-104.927124807547|39.95829376877,-104.926198406164|39.958548988847,-104.926047225584|39.959456842047,-104.926331456795|39.959547245735,-104.927372088504|39.960504854551,-104.928672368241|39.960333844064,-104.928989420049|39.960340911175,-104.929819725671|39.960980250706,-104.930113558239" target="_blank" class="btn-route">See Full Route</a>
+  <button class="btn-start-session" id="btnStart" onclick="startSession()">Start Knocking</button>
+  <button class="btn-pause" id="btnPause" onclick="pauseSession()">Pause &amp; Save</button>
+</div>
+<div class="route-note">All 19 stops on Google Maps</div>
+
+
+        <div class="door" id="door-1" data-step="1" data-addr="4883 E 144TH LN, THORNTON, CO 80602" data-lat="39.959608120438" data-lon="-104.930271817438" data-voters="4">
+          <div class="door-header">
+            <span class="step-num">1</span>
+            <span class="door-addr">4883 E 144TH LN</span>
+            <span class="walk-badge" style="background:#007bff">START</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 4 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.959608120438,-104.930271817438&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(1,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(1,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(1,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(1,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-1" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-1"></div>
+        </div>
+        <div class="door" id="door-2" data-step="2" data-addr="14479 DAHLIA ST, THORNTON, CO 80602" data-lat="39.959824186489" data-lon="-104.930971390927" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">2</span>
+            <span class="door-addr">14479 DAHLIA ST</span>
+            <span class="walk-badge" style="background:#28a745">1.1m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.959824186489,-104.930971390927&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(2,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(2,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(2,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(2,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-2" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-2"></div>
+        </div>
+        <div class="door" id="door-3" data-step="3" data-addr="14469 DAHLIA ST, THORNTON, CO 80602" data-lat="39.95961938194" data-lon="-104.930973919402" data-voters="3">
+          <div class="door-header">
+            <span class="step-num">3</span>
+            <span class="door-addr">14469 DAHLIA ST</span>
+            <span class="walk-badge" style="background:#28a745">0.3m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 3 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.95961938194,-104.930973919402&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(3,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(3,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(3,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(3,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-3" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-3"></div>
+        </div>
+        <div class="door" id="door-4" data-step="4" data-addr="14449 DAHLIA ST, THORNTON, CO 80602" data-lat="39.959143720012" data-lon="-104.930977117172" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">4</span>
+            <span class="door-addr">14449 DAHLIA ST</span>
+            <span class="walk-badge" style="background:#28a745">0.7m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.959143720012,-104.930977117172&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(4,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(4,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(4,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(4,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-4" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-4"></div>
+        </div>
+        <div class="door" id="door-5" data-step="5" data-addr="14439 DAHLIA ST, THORNTON, CO 80602" data-lat="39.958943279479" data-lon="-104.930978310294" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">5</span>
+            <span class="door-addr">14439 DAHLIA ST</span>
+            <span class="walk-badge" style="background:#28a745">0.3m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958943279479,-104.930978310294&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(5,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(5,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(5,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(5,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-5" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-5"></div>
+        </div>
+        <div class="door" id="door-6" data-step="6" data-addr="4868 E 144TH PL, THORNTON, CO 80602" data-lat="39.958010251134" data-lon="-104.930422501793" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">6</span>
+            <span class="door-addr">4868 E 144TH PL</span>
+            <span class="walk-badge" style="background:#ffc107">2.0m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958010251134,-104.930422501793&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(6,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(6,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(6,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(6,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-6" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-6"></div>
+        </div>
+        <div class="door" id="door-7" data-step="7" data-addr="14424 ELM ST, THORNTON, CO 80602" data-lat="39.958488897894" data-lon="-104.929533631111" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">7</span>
+            <span class="door-addr">14424 ELM ST</span>
+            <span class="walk-badge" style="background:#ffc107">1.7m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958488897894,-104.929533631111&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(7,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(7,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(7,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(7,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-7" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-7"></div>
+        </div>
+        <div class="door" id="door-8" data-step="8" data-addr="14440 FOREST ST, THORNTON, CO 80602" data-lat="39.958718511279" data-lon="-104.927938450941" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">8</span>
+            <span class="door-addr">14440 FOREST ST</span>
+            <span class="walk-badge" style="background:#ffc107">2.1m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958718511279,-104.927938450941&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(8,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(8,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(8,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(8,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-8" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-8"></div>
+        </div>
+        <div class="door" id="door-9" data-step="9" data-addr="14469 GLENCOE ST, THORNTON, CO 80602" data-lat="39.958959039615" data-lon="-104.927122629182" data-voters="3">
+          <div class="door-header">
+            <span class="step-num">9</span>
+            <span class="door-addr">14469 GLENCOE ST</span>
+            <span class="walk-badge" style="background:#28a745">1.3m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 3 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958959039615,-104.927122629182&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(9,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(9,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(9,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(9,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-9" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-9"></div>
+        </div>
+        <div class="door" id="door-10" data-step="10" data-addr="14419 GLENCOE ST, THORNTON, CO 80602" data-lat="39.958319540138" data-lon="-104.927124807547" data-voters="3">
+          <div class="door-header">
+            <span class="step-num">10</span>
+            <span class="door-addr">14419 GLENCOE ST</span>
+            <span class="walk-badge" style="background:#28a745">0.9m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 3 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958319540138,-104.927124807547&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(10,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(10,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(10,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(10,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-10" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-10"></div>
+        </div>
+        <div class="door" id="door-11" data-step="11" data-addr="14417 GRAPE ST, THORNTON, CO 80602" data-lat="39.95829376877" data-lon="-104.926198406164" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">11</span>
+            <span class="door-addr">14417 GRAPE ST</span>
+            <span class="walk-badge" style="background:#28a745">1.1m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.95829376877,-104.926198406164&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(11,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(11,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(11,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(11,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-11" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-11"></div>
+        </div>
+        <div class="door" id="door-12" data-step="12" data-addr="14436 GRAPE ST, THORNTON, CO 80602" data-lat="39.958548988847" data-lon="-104.926047225584" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">12</span>
+            <span class="door-addr">14436 GRAPE ST</span>
+            <span class="walk-badge" style="background:#28a745">0.5m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.958548988847,-104.926047225584&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(12,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(12,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(12,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(12,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-12" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-12"></div>
+        </div>
+        <div class="door" id="door-13" data-step="13" data-addr="5381 E 145TH AVE, THORNTON, CO 80602" data-lat="39.959456842047" data-lon="-104.926331456795" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">13</span>
+            <span class="door-addr">5381 E 145TH AVE</span>
+            <span class="walk-badge" style="background:#ffc107">1.6m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.959456842047,-104.926331456795&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(13,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(13,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(13,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(13,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-13" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-13"></div>
+        </div>
+        <div class="door" id="door-14" data-step="14" data-addr="5241 E 145TH AVE, THORNTON, CO 80602" data-lat="39.959547245735" data-lon="-104.927372088504" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">14</span>
+            <span class="door-addr">5241 E 145TH AVE</span>
+            <span class="walk-badge" style="background:#28a745">1.3m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.959547245735,-104.927372088504&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(14,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(14,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(14,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(14,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-14" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-14"></div>
+        </div>
+        <div class="door" id="door-15" data-step="15" data-addr="14544 ELM ST, THORNTON, CO 80602" data-lat="39.960504854551" data-lon="-104.928672368241" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">15</span>
+            <span class="door-addr">14544 ELM ST</span>
+            <span class="walk-badge" style="background:#ffc107">2.9m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.960504854551,-104.928672368241&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(15,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(15,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(15,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(15,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-15" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-15"></div>
+        </div>
+        <div class="door" id="door-16" data-step="16" data-addr="14515 ELM ST, THORNTON, CO 80602" data-lat="39.960333844064" data-lon="-104.928989420049" data-voters="3">
+          <div class="door-header">
+            <span class="step-num">16</span>
+            <span class="door-addr">14515 ELM ST</span>
+            <span class="walk-badge" style="background:#28a745">0.6m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 3 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.960333844064,-104.928989420049&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(16,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(16,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(16,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(16,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-16" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-16"></div>
+        </div>
+        <div class="door" id="door-17" data-step="17" data-addr="4915 E 145TH AVE, THORNTON, CO 80602" data-lat="39.960340911175" data-lon="-104.929819725671" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">17</span>
+            <span class="door-addr">4915 E 145TH AVE</span>
+            <span class="walk-badge" style="background:#28a745">0.9m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.960340911175,-104.929819725671&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(17,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(17,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(17,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(17,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-17" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-17"></div>
+        </div>
+        <div class="door" id="door-18" data-step="18" data-addr="14536 EUDORA ST, THORNTON, CO 80602" data-lat="39.960980250706" data-lon="-104.930113558239" data-voters="2">
+          <div class="door-header">
+            <span class="step-num">18</span>
+            <span class="door-addr">14536 EUDORA ST</span>
+            <span class="walk-badge" style="background:#28a745">1.3m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 2 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.960980250706,-104.930113558239&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(18,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(18,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(18,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(18,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-18" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-18"></div>
+        </div>
+        <div class="door" id="door-19" data-step="19" data-addr="4835 E 145TH AVE, THORNTON, CO 80602" data-lat="39.96034543413" data-lon="-104.930518514633" data-voters="1">
+          <div class="door-header">
+            <span class="step-num">19</span>
+            <span class="door-addr">4835 E 145TH AVE</span>
+            <span class="walk-badge" style="background:#28a745">1.4m</span>
+          </div>
+          <div class="door-meta">THORNTON 80602 &middot; 1 voter(s)</div>
+          <div class="door-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=39.96034543413,-104.930518514633&travelmode=walking" target="_blank" class="btn btn-nav">Navigate</a>
+            <button class="btn btn-contact" onclick="markDoor(19,'Contact')">Contact</button>
+            <button class="btn btn-not-home" onclick="markDoor(19,'Not Home')">Not Home</button>
+            <button class="btn btn-refused" onclick="markDoor(19,'Refused')">Refused</button>
+            <button class="btn btn-moved" onclick="markDoor(19,'Moved/Vacant')">Moved</button>
+          </div>
+          <div class="door-notes">
+            <input type="text" id="notes-19" placeholder="Notes..." class="notes-input" />
+          </div>
+          <div class="door-status" id="status-19"></div>
+        </div>
+
+
+        <div class="next-turf">
+          <h3>Session Complete!</h3>
+          <p>Great work! Head home and log your notes.</p>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=39.9463,-104.9540&travelmode=driving" target="_blank" class="btn btn-drive">Drive Home</a>
+        </div>
+
+<script>
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjBGtakc05SnyMWSMfgvhR92uxE-NdWQwlk0RYKQ3-lse03BUyif-NUtpgUvgfoc4r/exec";
+var TURF_ID = "s1_t410";
+var totalDoors = 19;
+var doorStatus = {};
+var sessionStartTime = null;
+var timerInterval = null;
+var STORAGE_KEY = "canvass_" + TURF_ID;
+
+// ===== LOCAL STORAGE FOR RESUME =====
+function saveLocal() {
+  var state = {
+    doorStatus: doorStatus,
+    sessionStartTime: sessionStartTime,
+    lastSaved: new Date().toISOString()
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadLocal() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function restoreState() {
+  var saved = loadLocal();
+  if (saved && saved.doorStatus && Object.keys(saved.doorStatus).length > 0) {
+    doorStatus = saved.doorStatus;
+    var count = Object.keys(doorStatus).length;
+    
+    // Restore session timer
+    if (saved.sessionStartTime) {
+      sessionStartTime = saved.sessionStartTime;
+      document.getElementById('btnStart').style.display = 'none';
+      document.getElementById('btnPause').style.display = 'block';
+      startTimer();
+    }
+    
+    // Mark completed doors
+    for (var step in doorStatus) {
+      var door = document.getElementById('door-' + step);
+      var statusEl = document.getElementById('status-' + step);
+      if (door) {
+        door.classList.add('done');
+        var colors = {'Contact':'#28a745','Not Home':'#ffc107','Refused':'#dc3545','Moved/Vacant':'#6c757d'};
+        var disp = doorStatus[step];
+        if (statusEl) statusEl.innerHTML = '<span style="color:' + (colors[disp]||'#333') + '">' + disp + '</span>';
+      }
+    }
+    
+    // Update stats
+    updateStats();
+    
+    // Highlight next un-knocked door
+    highlightNext();
+    
+    // Show resume banner
+    document.getElementById('resumeBanner').style.display = 'block';
+    document.getElementById('resumeCount').textContent = count;
+    
+    // Scroll to next un-knocked door
+    var nextStep = findNextStep();
+    if (nextStep) {
+      var el = document.getElementById('door-' + nextStep);
+      if (el) setTimeout(function() { el.scrollIntoView({behavior:'smooth', block:'center'}); }, 500);
+    }
+  }
+}
+
+// ===== ALSO TRY LOADING FROM GOOGLE SHEET (fallback) =====
+function loadFromSheet() {
+  // Only if localStorage was empty
+  if (Object.keys(doorStatus).length > 0) return;
+  
+  var callbackName = 'sheetCallback_' + Math.random().toString(36).slice(2);
+  window[callbackName] = function(data) {
+    if (data.status === 'ok' && data.dispositions && data.dispositions.length > 0) {
+      data.dispositions.forEach(function(d) {
+        if (d.step && d.disposition && !doorStatus[d.step]) {
+          doorStatus[d.step] = d.disposition;
+          var door = document.getElementById('door-' + d.step);
+          var statusEl = document.getElementById('status-' + d.step);
+          if (door) {
+            door.classList.add('done');
+            var colors = {'Contact':'#28a745','Not Home':'#ffc107','Refused':'#dc3545','Moved/Vacant':'#6c757d'};
+            if (statusEl) statusEl.innerHTML = '<span style="color:' + (colors[d.disposition]||'#333') + '">' + d.disposition + '</span>';
+          }
+        }
+      });
+      updateStats();
+      highlightNext();
+      if (Object.keys(doorStatus).length > 0) {
+        document.getElementById('resumeBanner').style.display = 'block';
+        document.getElementById('resumeCount').textContent = Object.keys(doorStatus).length;
+        saveLocal();
+      }
+    }
+    delete window[callbackName];
+  };
+  var s = document.createElement('script');
+  s.src = SCRIPT_URL + '?action=fetch&turf=' + TURF_ID + '&callback=' + callbackName;
+  document.body.appendChild(s);
+}
+
+// ===== SESSION TIMER =====
+function startSession() {
+  sessionStartTime = new Date().toISOString();
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnPause').style.display = 'block';
+  startTimer();
+  saveLocal();
+  sendData({ action: 'timing', turf: TURF_ID, event: 'start' });
+}
+
+function pauseSession() {
+  var knocked = Object.keys(doorStatus).length;
+  var contacts = Object.values(doorStatus).filter(function(v){return v==='Contact';}).length;
+  var mins = getElapsedMinutes();
+  var dph = mins > 0 ? Math.round(knocked / (mins/60) * 10) / 10 : 0;
+  
+  sendData({
+    action: 'timing', turf: TURF_ID, event: 'pause',
+    knocked: knocked, contacts: contacts, minutes: Math.round(mins), dph: dph
+  });
+  
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('btnPause').textContent = 'Paused — Tap to Resume';
+  document.getElementById('btnPause').onclick = resumeSession;
+  saveLocal();
+}
+
+function resumeSession() {
+  document.getElementById('btnPause').textContent = 'Pause & Save';
+  document.getElementById('btnPause').onclick = pauseSession;
+  startTimer();
+  sendData({ action: 'timing', turf: TURF_ID, event: 'resume' });
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function getElapsedMinutes() {
+  if (!sessionStartTime) return 0;
+  return (new Date() - new Date(sessionStartTime)) / 60000;
+}
+
+function updateTimer() {
+  var mins = getElapsedMinutes();
+  var h = Math.floor(mins / 60);
+  var m = Math.floor(mins % 60);
+  var s = Math.floor((mins * 60) % 60);
+  var display = (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's';
+  document.getElementById('timerDisplay').textContent = 'Time: ' + display;
+}
+
+// ===== DOOR ACTIONS =====
+function findNextStep() {
+  for (var i = 1; i <= totalDoors; i++) {
+    if (!doorStatus[i]) return i;
+  }
+  return null;
+}
+
+function highlightNext() {
+  // Remove all active
+  document.querySelectorAll('.door.active').forEach(function(el) { el.classList.remove('active'); });
+  var next = findNextStep();
+  if (next) {
+    var el = document.getElementById('door-' + next);
+    if (el) el.classList.add('active');
+  }
+}
+
+function updateStats() {
+  var knocked = Object.keys(doorStatus).length;
+  var contacts = Object.values(doorStatus).filter(function(v){return v==='Contact';}).length;
+  document.getElementById('statDoors').textContent = knocked;
+  document.getElementById('statContacts').textContent = contacts;
+  document.getElementById('statLeft').textContent = totalDoors - knocked;
+  document.getElementById('progressBar').style.width = (knocked/totalDoors*100) + '%';
+  
+  var mins = getElapsedMinutes();
+  if (mins > 1 && knocked > 0) {
+    document.getElementById('statDPH').textContent = Math.round(knocked / (mins/60) * 10) / 10;
+  }
+}
+
+function markDoor(step, disposition) {
+  var door = document.getElementById('door-' + step);
+  var statusEl = document.getElementById('status-' + step);
+  var addr = door.getAttribute('data-addr');
+  var lat = door.getAttribute('data-lat');
+  var lon = door.getAttribute('data-lon');
+  var notes = document.getElementById('notes-' + step).value || '';
+  
+  doorStatus[step] = disposition;
+  door.classList.add('done');
+  
+  var colors = {'Contact':'#28a745','Not Home':'#ffc107','Refused':'#dc3545','Moved/Vacant':'#6c757d'};
+  statusEl.innerHTML = '<span style="color:' + (colors[disposition]||'#333') + '">' + disposition + '</span>';
+  
+  updateStats();
+  highlightNext();
+  saveLocal();
+  
+  // Scroll to next door
+  var next = findNextStep();
+  if (next) {
+    var nextEl = document.getElementById('door-' + next);
+    if (nextEl) setTimeout(function() { nextEl.scrollIntoView({behavior:'smooth', block:'center'}); }, 300);
+  }
+  
+  // Send to Google Sheet
+  sendData({
+    action: 'submit',
+    turf_id: TURF_ID,
+    stop_num: step,
+    address: addr,
+    disposition: disposition,
+    notes: notes,
+    lat: lat,
+    lng: lon
+  });
+}
+
+function sendData(payload) {
+  var ifr = document.createElement("iframe");
+  ifr.name = "sf_" + Math.random().toString(36).slice(2);
+  ifr.style.display = "none";
+  document.body.appendChild(ifr);
+  var form = document.createElement("form");
+  form.method = "GET";
+  form.action = SCRIPT_URL;
+  form.target = ifr.name;
+  for (var k in payload) {
+    var inp = document.createElement("input");
+    inp.type = "hidden"; inp.name = k; inp.value = payload[k];
+    form.appendChild(inp);
+  }
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(function(){ try{ifr.remove();form.remove();}catch(e){} }, 15000);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', function() {
+  restoreState();       // Try localStorage first
+  loadFromSheet();      // Then check Google Sheet as fallback
+  if (Object.keys(doorStatus).length === 0) {
+    document.getElementById('door-1').classList.add('active');
+  }
+});
+</script>
+</body>
+</html>
