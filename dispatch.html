@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvass Dispatch - Adams County</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    header {
+      background: #1B4332;
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Aggregate Stats Panel */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-left: 4px solid #1B4332;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1B4332;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-subtext {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    /* Panel Sections */
+    .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      background: #f9f9f9;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-content {
+      padding: 20px;
+    }
+
+    /* Assignment Cards */
+    .turf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+    }
+
+    .turf-card {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 16px;
+      background: #fafafa;
+      transition: all 0.2s;
+    }
+
+    .turf-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-color: #1B4332;
+    }
+
+    .turf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .turf-id {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .turf-session {
+      font-size: 11px;
+      background: #1B4332;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .turf-info {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+
+    .turf-info-line {
+      margin: 4px 0;
+    }
+
+    .turf-assign-section {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .volunteer-input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .volunteer-input:focus {
+      outline: none;
+      border-color: #1B4332;
+      box-shadow: 0 0 3px rgba(27, 67, 50, 0.2);
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #1B4332;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #0f2818;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(27, 67, 50, 0.3);
+    }
+
+    .btn-secondary {
+      background: #ddd;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #ccc;
+    }
+
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .badge-assigned {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge-unassigned {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .turf-assigned-volunteer {
+      margin-bottom: 8px;
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid #28a745;
+    }
+
+    .volunteer-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .volunteer-code {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    .volunteer-link {
+      font-size: 11px;
+      color: #0066cc;
+      word-break: break-all;
+      margin-top: 6px;
+      padding: 6px;
+      background: #f5f5f5;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .btn-copy {
+      display: block;
+      width: 100%;
+      margin-top: 6px;
+      padding: 6px;
+      font-size: 11px;
+    }
+
+    /* Progress Cards */
+    .progress-card {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 16px;
+      background: white;
+      margin-bottom: 12px;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .progress-badge {
+      font-size: 11px;
+      background: #1B4332;
+      color: white;
+      padding: 3px 6px;
+      border-radius: 3px;
+    }
+
+    .progress-stat {
+      display: inline-block;
+      margin-right: 20px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .progress-stat-value {
+      font-weight: 600;
+      color: #1B4332;
+    }
+
+    .progress-bar-container {
+      background: #eee;
+      border-radius: 4px;
+      height: 24px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #1B4332, #2d6a4f);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      transition: width 0.3s ease;
+    }
+
+    .progress-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .progress-detail {
+      padding: 8px;
+      background: #f9f9f9;
+      border-radius: 4px;
+    }
+
+    .progress-detail-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .progress-detail-value {
+      font-weight: 600;
+      color: #333;
+      margin-top: 2px;
+    }
+
+    /* Loading and Messages */
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #999;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #ddd;
+      border-top-color: #1B4332;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .message-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .message-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .message-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .turf-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .progress-details {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .refresh-indicator {
+      font-size: 12px;
+      color: #999;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Canvass Dispatch</h1>
+    <div class="header-subtitle">Adams County, CO CD-8 — Real-time canvass management</div>
+  </header>
+
+  <div class="container">
+    <!-- Aggregate Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-doors-knocked">0</div>
+        <div class="stat-label">Doors Knocked</div>
+        <div class="stat-subtext" id="stat-doors-pct">0% complete</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-doors-remaining">0</div>
+        <div class="stat-label">Doors Remaining</div>
+        <div class="stat-subtext" id="stat-doors-remaining-pct">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-contacts">0</div>
+        <div class="stat-label">Contacts Made</div>
+        <div class="stat-subtext">Total conversations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-volunteers">0</div>
+        <div class="stat-label">Active Volunteers</div>
+        <div class="stat-subtext">Currently canvassing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-doors-per-hour">—</div>
+        <div class="stat-label">Doors per Hour</div>
+        <div class="stat-subtext">Average pace</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-eta">—</div>
+        <div class="stat-label">Est. Time to Finish</div>
+        <div class="stat-subtext" id="stat-eta-detail">Based on current pace</div>
+      </div>
+    </div>
+
+    <!-- Turf Assignment Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Turf Assignment Manager</span>
+        <span class="refresh-indicator" id="assign-refresh">Ready</span>
+      </div>
+      <div class="panel-content">
+        <div class="turf-grid" id="turf-assignment-grid">
+          <div class="loading"><span class="spinner"></span>Loading turfs...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Progress Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Live Progress</span>
+        <span class="refresh-indicator" id="progress-refresh">Refreshing every 30s</span>
+      </div>
+      <div class="panel-content">
+        <div id="progress-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div>No turfs assigned yet. Assign a volunteer to a turf above to see live progress.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================================
+    // CONFIG
+    // ============================================================================
+    var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjBGtakc05SnyMWSMfgvhR92uxE-NdWQwlk0RYKQ3-lse03BUyif-NUtpgUvgfoc4r/exec';
+
+    var SESSIONS = [
+      {"session":1,"total_doors":72,"total_voters":111,"turfs":[
+        {"tid":63,"doors":53,"city":"THORNTON","zip":"80602","drive":2,"center_lat":39.944311,"center_lon":-104.946323},
+        {"tid":410,"doors":19,"city":"THORNTON","zip":"80602","drive":5,"center_lat":39.959368,"center_lon":-104.928967}
+      ]},
+      {"session":2,"total_doors":77,"total_voters":113,"turfs":[
+        {"tid":130,"doors":46,"city":"THORNTON","zip":"80602","drive":1,"center_lat":39.949063,"center_lon":-104.948949},
+        {"tid":339,"doors":31,"city":"THORNTON","zip":"80602","drive":2,"center_lat":39.955459,"center_lon":-104.949063}
+      ]},
+      {"session":3,"total_doors":69,"total_voters":92,"turfs":[
+        {"tid":27,"doors":59,"city":"THORNTON","zip":"80241","drive":5,"center_lat":39.931122,"center_lon":-104.942447},
+        {"tid":470,"doors":10,"city":"THORNTON","zip":"80241","drive":4,"center_lat":39.924753,"center_lon":-104.923841}
+      ]},
+      {"session":4,"total_doors":77,"total_voters":115,"turfs":[
+        {"tid":145,"doors":45,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.946342,"center_lon":-104.952257},
+        {"tid":327,"doors":32,"city":"THORNTON","zip":"80241","drive":3,"center_lat":39.935695,"center_lon":-104.944195}
+      ]},
+      {"session":5,"total_doors":76,"total_voters":109,"turfs":[
+        {"tid":244,"doors":38,"city":"THORNTON","zip":"80602","drive":1,"center_lat":39.945097,"center_lon":-104.956348},
+        {"tid":245,"doors":38,"city":"THORNTON","zip":"80241","drive":3,"center_lat":39.93282,"center_lon":-104.954363}
+      ]}
+    ];
+
+    // ============================================================================
+    // STATE
+    // ============================================================================
+    var state = {
+      assignments: {}, // {turf_key: volunteer_name}
+      volunteerCodes: {}, // {volunteer_name: code}
+      progressData: {}, // {turf_key: {dispositions: [...]}}
+      turfs: [] // flattened list of turfs with session info
+    };
+
+    // Flatten turfs list
+    function initTurfs() {
+      state.turfs = [];
+      SESSIONS.forEach(function(session) {
+        session.turfs.forEach(function(turf) {
+          state.turfs.push({
+            session: session.session,
+            tid: turf.tid,
+            doors: turf.doors,
+            city: turf.city,
+            zip: turf.zip,
+            drive: turf.drive,
+            center_lat: turf.center_lat,
+            center_lon: turf.center_lon,
+            key: 's' + session.session + '_t' + turf.tid
+          });
+        });
+      });
+    }
+
+    // ============================================================================
+    // CROSS-ORIGIN COMMUNICATION
+    // ============================================================================
+    function sendData(payload) {
+      var ifr = document.createElement('iframe');
+      ifr.name = 'sf_' + Math.random().toString(36).slice(2);
+      ifr.style.display = 'none';
+      document.body.appendChild(ifr);
+      var form = document.createElement('form');
+      form.method = 'GET';
+      form.action = SCRIPT_URL;
+      form.target = ifr.name;
+      for (var k in payload) {
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = payload[k];
+        form.appendChild(inp);
+      }
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function() {
+        try { ifr.remove(); form.remove(); } catch(e) {}
+      }, 15000);
+    }
+
+    function jsonpFetch(params, callback) {
+      var cb = 'cb_' + Math.random().toString(36).slice(2);
+      window[cb] = function(data) {
+        callback(data);
+        delete window[cb];
+      };
+      var s = document.createElement('script');
+      var qs = '?callback=' + cb;
+      for (var k in params) {
+        qs += '&' + k + '=' + encodeURIComponent(params[k]);
+      }
+      s.src = SCRIPT_URL + qs;
+      document.body.appendChild(s);
+    }
+
+    // ============================================================================
+    // ASSIGNMENTS
+    // ============================================================================
+    function loadAssignments() {
+      jsonpFetch({ action: 'list' }, function(data) {
+        if (data.status === 'ok' && data.assigned) {
+          state.assignments = data.assigned;
+        }
+        renderAssignmentPanel();
+        updateStats();
+      });
+    }
+
+    function generateVolunteerCode(name) {
+      if (state.volunteerCodes[name]) return state.volunteerCodes[name];
+      var code = (name.substring(0, 2).toUpperCase() + Math.floor(Math.random() * 10).toString()).slice(0, 3);
+      state.volunteerCodes[name] = code;
+      return code;
+    }
+
+    function assignTurf(turfKey, turfName, volunteerInput) {
+      var volName = volunteerInput.value.trim();
+      if (!volName) {
+        alert('Please enter a volunteer name');
+        return;
+      }
+      volunteerInput.disabled = true;
+      sendData({
+        action: 'assign',
+        turf_id: turfKey,
+        volunteer: volName,
+        turf_name: turfName
+      });
+      state.assignments[turfKey] = volName;
+      setTimeout(function() {
+        renderAssignmentPanel();
+        updateStats();
+        volunteerInput.disabled = false;
+      }, 500);
+    }
+
+    function unassignTurf(turfKey, turfName) {
+      sendData({
+        action: 'unassign',
+        turf_id: turfKey
+      });
+      delete state.assignments[turfKey];
+      setTimeout(function() {
+        renderAssignmentPanel();
+        updateStats();
+      }, 500);
+    }
+
+    function renderAssignmentPanel() {
+      var grid = document.getElementById('turf-assignment-grid');
+      grid.innerHTML = '';
+
+      state.turfs.forEach(function(turf) {
+        var isAssigned = !!state.assignments[turf.key];
+        var volunteerName = state.assignments[turf.key] || '';
+
+        var card = document.createElement('div');
+        card.className = 'turf-card';
+
+        var headerHTML = '<div class="turf-header"><div class="turf-id">Turf ' + turf.tid + '</div><span class="turf-session">S' + turf.session + '</span></div>';
+
+        var infoHTML = '<div class="turf-info">' +
+          '<div class="turf-info-line">' + turf.city + ', ' + turf.zip + '</div>' +
+          '<div class="turf-info-line"><strong>' + turf.doors + '</strong> doors</div>' +
+          '<div class="turf-info-line">' + turf.drive + ' min drive</div>' +
+          '</div>';
+
+        var assignHTML = '';
+        if (isAssigned) {
+          var code = generateVolunteerCode(volunteerName);
+          var link = 'app.html?volunteer=' + encodeURIComponent(volunteerName) + '&turf=' + turf.tid;
+          assignHTML = '<div class="turf-assigned-volunteer">' +
+            '<div class="volunteer-name">' + volunteerName + '</div>' +
+            '<div class="volunteer-code">Code: ' + code + '</div>' +
+            '<div class="volunteer-link">' + link + '</div>' +
+            '<button class="btn btn-secondary btn-small btn-copy" onclick="copyToClipboard(\'' + link.replace(/'/g, "\\'") + '\', this)">Copy Link</button>' +
+            '</div>' +
+            '<button class="btn btn-secondary" style="width:100%;" onclick="unassignTurf(\'' + turf.key + '\', \'Turf ' + turf.tid + '\')">Unassign</button>';
+        } else {
+          assignHTML = '<div class="turf-assign-section">' +
+            '<input type="text" class="volunteer-input" id="vol-' + turf.key + '" placeholder="Volunteer name">' +
+            '<button class="btn btn-primary" onclick="assignTurf(\'' + turf.key + '\', \'Turf ' + turf.tid + '\', document.getElementById(\'vol-' + turf.key + '\'))">Assign</button>' +
+            '</div>';
+        }
+
+        card.innerHTML = headerHTML + infoHTML + assignHTML;
+        grid.appendChild(card);
+      });
+    }
+
+    function copyToClipboard(text, btn) {
+      var originalText = btn.textContent;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = 'Copied!';
+        setTimeout(function() {
+          btn.textContent = originalText;
+        }, 2000);
+      }).catch(function() {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = 'Copied!';
+        setTimeout(function() {
+          btn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    // ============================================================================
+    // PROGRESS
+    // ============================================================================
+    function fetchProgress() {
+      var assignedTurfs = Object.keys(state.assignments);
+      if (assignedTurfs.length === 0) {
+        document.getElementById('progress-container').innerHTML =
+          '<div class="empty-state"><div class="empty-state-icon">📋</div><div>No turfs assigned yet. Assign a volunteer to a turf above to see live progress.</div></div>';
+        return;
+      }
+
+      var remaining = assignedTurfs.length;
+      assignedTurfs.forEach(function(turfKey) {
+        jsonpFetch(
+          { action: 'fetch', turf: turfKey },
+          function(data) {
+            remaining--;
+            if (data && data.status === 'ok') {
+              state.progressData[turfKey] = data;
+            }
+            if (remaining === 0) {
+              renderProgressPanel();
+              updateStats();
+            }
+          }
+        );
+      });
+    }
+
+    function renderProgressPanel() {
+      var container = document.getElementById('progress-container');
+      var assignedTurfs = Object.keys(state.assignments);
+
+      if (assignedTurfs.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div>No turfs assigned yet.</div></div>';
+        return;
+      }
+
+      var html = '';
+      assignedTurfs.forEach(function(turfKey) {
+        var volName = state.assignments[turfKey];
+        var code = generateVolunteerCode(volName);
+        var data = state.progressData[turfKey];
+        var turf = state.turfs.find(function(t) { return t.key === turfKey; });
+
+        var doorsKnocked = 0;
+        var contactCount = 0;
+        var lastStep = 0;
+
+        if (data && data.dispositions) {
+          doorsKnocked = data.dispositions.length;
+          contactCount = data.dispositions.filter(function(d) {
+            return d.disposition && (d.disposition === 'Contacted' || d.disposition === 'Volunteer');
+          }).length;
+          lastStep = data.dispositions.length > 0 ? Math.max.apply(Math, data.dispositions.map(function(d) { return d.step || 0; })) : 0;
+        }
+
+        var doorsRemaining = turf.doors - doorsKnocked;
+        var percent = turf.doors > 0 ? Math.round((doorsKnocked / turf.doors) * 100) : 0;
+
+        html += '<div class="progress-card">' +
+          '<div class="progress-header">' +
+          '<span class="progress-title">' + volName + ' <span style="color:#999;font-size:12px;">(Code: ' + code + ')</span></span>' +
+          '<span class="progress-badge">Turf ' + turf.tid + ' - Session ' + turf.session + '</span>' +
+          '</div>' +
+          '<div class="progress-bar-container">' +
+          '<div class="progress-bar-fill" style="width:' + percent + '%">' + percent + '%</div>' +
+          '</div>' +
+          '<div>' +
+          '<span class="progress-stat"><span class="progress-stat-value">' + doorsKnocked + '</span> knocked</span>' +
+          '<span class="progress-stat"><span class="progress-stat-value">' + doorsRemaining + '</span> remaining</span>' +
+          '<span class="progress-stat"><span class="progress-stat-value">' + contactCount + '</span> contacts</span>' +
+          '<span class="progress-stat"><span class="progress-stat-value">' + lastStep + '</span> last step</span>' +
+          '</div>' +
+          '<div class="progress-details">' +
+          '<div class="progress-detail">' +
+          '<div class="progress-detail-label">Location</div>' +
+          '<div class="progress-detail-value">' + turf.city + ', ' + turf.zip + '</div>' +
+          '</div>' +
+          '<div class="progress-detail">' +
+          '<div class="progress-detail-label">Drive Time</div>' +
+          '<div class="progress-detail-value">' + turf.drive + ' min</div>' +
+          '</div>' +
+          '<div class="progress-detail">' +
+          '<div class="progress-detail-label">Est. Completion</div>' +
+          '<div class="progress-detail-value" id="eta-' + turfKey + '">Calculating...</div>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      });
+
+      container.innerHTML = html;
+      calculateETAs();
+    }
+
+    function calculateETAs() {
+      var assignedTurfs = Object.keys(state.assignments);
+      assignedTurfs.forEach(function(turfKey) {
+        var data = state.progressData[turfKey];
+        var turf = state.turfs.find(function(t) { return t.key === turfKey; });
+        var doorsKnocked = data && data.dispositions ? data.dispositions.length : 0;
+        var doorsRemaining = turf.doors - doorsKnocked;
+
+        var etaText = '—';
+        if (doorsKnocked > 0 && doorsRemaining > 0) {
+          var firstTimestamp = data.dispositions[0] && data.dispositions[0].timestamp ? new Date(data.dispositions[0].timestamp).getTime() : Date.now();
+          var lastTimestamp = data.dispositions[data.dispositions.length - 1] && data.dispositions[data.dispositions.length - 1].timestamp ? new Date(data.dispositions[data.dispositions.length - 1].timestamp).getTime() : Date.now();
+          var timeElapsed = (lastTimestamp - firstTimestamp) / 1000 / 60; // minutes
+          if (timeElapsed > 0) {
+            var doorsPerMinute = doorsKnocked / timeElapsed;
+            var minutesRemaining = Math.ceil(doorsRemaining / doorsPerMinute);
+            var hours = Math.floor(minutesRemaining / 60);
+            var mins = minutesRemaining % 60;
+            if (hours > 0) {
+              etaText = hours + 'h ' + mins + 'm';
+            } else {
+              etaText = mins + 'm';
+            }
+          }
+        }
+
+        var el = document.getElementById('eta-' + turfKey);
+        if (el) el.textContent = etaText;
+      });
+    }
+
+    // ============================================================================
+    // STATS
+    // ============================================================================
+    function updateStats() {
+      var totalDoors = 0;
+      var totalDoorsKnocked = 0;
+      var totalContacts = 0;
+      var activeVolunteers = Object.keys(state.assignments).length;
+      var allTimestamps = [];
+
+      SESSIONS.forEach(function(session) {
+        totalDoors += session.total_doors;
+      });
+
+      var assignedTurfs = Object.keys(state.assignments);
+      assignedTurfs.forEach(function(turfKey) {
+        var data = state.progressData[turfKey];
+        if (data && data.dispositions) {
+          totalDoorsKnocked += data.dispositions.length;
+          totalContacts += data.dispositions.filter(function(d) {
+            return d.disposition && (d.disposition === 'Contacted' || d.disposition === 'Volunteer');
+          }).length;
+          data.dispositions.forEach(function(d) {
+            if (d.timestamp) allTimestamps.push(new Date(d.timestamp).getTime());
+          });
+        }
+      });
+
+      var doorsRemaining = totalDoors - totalDoorsKnocked;
+      var doorsPercent = totalDoors > 0 ? Math.round((totalDoorsKnocked / totalDoors) * 100) : 0;
+
+      document.getElementById('stat-doors-knocked').textContent = totalDoorsKnocked;
+      document.getElementById('stat-doors-pct').textContent = doorsPercent + '% of ' + totalDoors;
+      document.getElementById('stat-doors-remaining').textContent = doorsRemaining;
+      document.getElementById('stat-contacts').textContent = totalContacts;
+      document.getElementById('stat-volunteers').textContent = activeVolunteers;
+
+      // Calculate doors per hour
+      if (allTimestamps.length > 1) {
+        allTimestamps.sort();
+        var timeRangeMs = allTimestamps[allTimestamps.length - 1] - allTimestamps[0];
+        var timeRangeHours = timeRangeMs / 1000 / 60 / 60;
+        if (timeRangeHours > 0) {
+          var doorsPerHour = Math.round(totalDoorsKnocked / timeRangeHours);
+          document.getElementById('stat-doors-per-hour').textContent = doorsPerHour;
+        } else {
+          document.getElementById('stat-doors-per-hour').textContent = '—';
+        }
+      } else {
+        document.getElementById('stat-doors-per-hour').textContent = '—';
+      }
+
+      // Calculate ETA
+      if (allTimestamps.length > 1 && doorsRemaining > 0) {
+        allTimestamps.sort();
+        var timeElapsed = (allTimestamps[allTimestamps.length - 1] - allTimestamps[0]) / 1000 / 60; // minutes
+        if (timeElapsed > 0) {
+          var doorsPerMinute = totalDoorsKnocked / timeElapsed;
+          var minutesRemaining = Math.ceil(doorsRemaining / doorsPerMinute);
+          var hours = Math.floor(minutesRemaining / 60);
+          var mins = minutesRemaining % 60;
+          var etaText = hours > 0 ? hours + 'h ' + mins + 'm' : mins + 'm';
+          document.getElementById('stat-eta').textContent = etaText;
+          document.getElementById('stat-eta-detail').textContent = 'Based on current pace';
+        } else {
+          document.getElementById('stat-eta').textContent = '—';
+          document.getElementById('stat-eta-detail').textContent = 'Calculating...';
+        }
+      } else {
+        document.getElementById('stat-eta').textContent = '—';
+        document.getElementById('stat-eta-detail').textContent = 'No data yet';
+      }
+    }
+
+    // ============================================================================
+    // INITIALIZATION & REFRESH
+    // ============================================================================
+    function init() {
+      initTurfs();
+      loadAssignments();
+      setInterval(function() {
+        if (Object.keys(state.assignments).length > 0) {
+          fetchProgress();
+          document.getElementById('progress-refresh').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+        }
+      }, 30000); // refresh every 30s
+
+      // Initial load
+      setTimeout(function() {
+        fetchProgress();
+      }, 1000);
+    }
+
+    // Expose for inline onclick handlers
+    window.assignTurf = assignTurf;
+    window.unassignTurf = unassignTurf;
+    window.copyToClipboard = copyToClipboard;
+
+    // Start
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CD-8 Canvass — Volunteer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+       background: #f5f5f5; color: #333; max-width: 600px; margin: 0 auto; }
+
+/* === DASHBOARD === */
+#dashboard { padding: 15px; }
+#dashboard h1 { color: #1B4332; font-size: 22px; margin-bottom: 5px; }
+.subtitle { color: #666; font-size: 14px; margin-bottom: 20px; }
+.total-banner { background: #1B4332; color: white; border-radius: 10px; padding: 15px;
+                 margin-bottom: 15px; text-align: center; }
+.total-banner .big { font-size: 28px; font-weight: bold; }
+.session-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 12px;
+                 border: 1px solid #e0e0e0; }
+.session-hdr { font-size: 18px; font-weight: bold; color: #1B4332; }
+.session-stats { font-size: 13px; color: #666; margin-bottom: 10px; }
+.turf-link { display: block; background: #f0f7f0; border-radius: 8px; padding: 12px;
+              margin-top: 8px; text-decoration: none; color: #333; cursor: pointer; }
+.turf-link:hover { background: #d8f3dc; }
+.turf-link.assigned { background: #d1ecf1; }
+.turf-link.not-assigned { background: #f0f0f0; opacity: 0.5; pointer-events: none; }
+.turf-label { display: block; font-weight: 600; font-size: 15px; color: #1B4332; }
+.turf-detail { display: block; font-size: 12px; color: #666; margin-top: 2px; }
+.turf-assigned { display: block; font-size: 11px; font-weight: 600; margin-top: 3px; color: #0c5460; }
+.no-assignment { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px;
+                  margin-bottom: 15px; text-align: center; font-size: 14px; }
+.code-entry { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+              border: 1px solid #e0e0e0; text-align: center; }
+.code-entry label { font-weight: 600; font-size: 14px; color: #666; display: block; margin-bottom: 8px; }
+.code-input { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 18px;
+              text-align: center; width: 100px; letter-spacing: 4px; }
+.name-entry { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+              border: 1px solid #e0e0e0; }
+.name-entry label { font-weight: 600; font-size: 15px; color: #1B4332; display: block; margin-bottom: 8px; }
+.name-row { display: flex; gap: 8px; }
+.name-input { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; }
+.btn-set-name { background: #1B4332; color: white; padding: 10px 16px; border: none; border-radius: 8px;
+                font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.name-display { display: flex; justify-content: space-between; align-items: center; }
+.name-display .greeting { font-size: 15px; font-weight: 600; color: #1B4332; }
+.name-display .change-link { font-size: 13px; color: #007bff; cursor: pointer; text-decoration: underline; }
+
+/* === TURF VIEW === */
+#turfview { display: none; }
+.sticky-header { position: sticky; top: 0; z-index: 100; background: #f5f5f5; padding: 10px 10px 0; }
+.header { background: #1B4332; color: white; padding: 12px 15px; border-radius: 10px; margin-bottom: 8px; }
+.header h1 { font-size: 16px; margin-bottom: 3px; }
+.header p { font-size: 12px; opacity: 0.85; }
+.progress { background: #ddd; border-radius: 8px; height: 6px; margin: 6px 0 0; }
+.progress-bar { background: #28a745; height: 6px; border-radius: 8px; width: 0%; transition: width 0.3s; }
+.stats { display: flex; justify-content: space-around; background: white; padding: 8px;
+          border-radius: 8px; margin-bottom: 6px; font-size: 12px; }
+.stats div { text-align: center; }
+.stats .num { font-size: 18px; font-weight: bold; color: #1B4332; }
+.action-bar { display: flex; gap: 6px; margin-bottom: 6px; }
+.action-bar a, .action-bar button { flex: 1; font-size: 13px; padding: 8px 6px; border-radius: 8px;
+                                      border: none; cursor: pointer; text-align: center; font-weight: 600;
+                                      text-decoration: none; }
+.btn-route { background: #6F42C1; color: white; }
+.btn-start { background: #28a745; color: white; }
+.btn-pause { background: #ffc107; color: #333; display: none; }
+.btn-dash { background: #6c757d; color: white; }
+.route-note { font-size: 10px; color: #666; text-align: center; margin-bottom: 4px; }
+.sticky-shadow { height: 4px; background: linear-gradient(to bottom, rgba(0,0,0,0.08), transparent); }
+.content { padding: 0 10px 10px; }
+.resume-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 10px;
+                  margin-bottom: 10px; text-align: center; font-size: 13px; display: none; }
+.door { background: white; border-radius: 8px; padding: 12px; margin-bottom: 8px;
+         border-left: 4px solid #ddd; transition: all 0.3s; }
+.door.done { border-left-color: #28a745; opacity: 0.6; }
+.door.done .door-actions, .door.done .door-notes { display: none; }
+.door.active { border-left-color: #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.door-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.step-num { background: #1B4332; color: white; width: 28px; height: 28px; border-radius: 50%;
+             display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
+.door.done .step-num { background: #28a745; }
+.door-addr { font-weight: 600; font-size: 15px; }
+.door-meta { font-size: 12px; color: #666; margin-left: 36px; margin-bottom: 8px; }
+.door-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: 36px; }
+.door-notes { margin: 6px 0 0 36px; }
+.notes-row { display: flex; gap: 6px; }
+.notes-input { flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.btn-save-note { background: #17a2b8; color: white; padding: 6px 12px; border: none; border-radius: 6px;
+                  font-size: 12px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.note-saved { font-size: 11px; color: #28a745; margin-top: 3px; }
+.walk-badge { color: #fff; padding: 2px 6px; border-radius: 10px; font-size: 11px; white-space: nowrap; }
+.btn { padding: 7px 12px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;
+        text-decoration: none; text-align: center; font-weight: 500; }
+.btn-nav { background: #007bff; color: white; }
+.btn-contacted { background: #28a745; color: white; }
+.btn-volunteer { background: #17a2b8; color: white; }
+.btn-litdrop { background: #6f42c1; color: white; }
+.btn-refused { background: #dc3545; color: white; }
+.btn-moved { background: #6c757d; color: white; }
+.door-status { margin-left: 36px; margin-top: 6px; font-size: 12px; font-weight: 600; }
+.next-turf { background: white; border-radius: 8px; padding: 15px; margin-top: 15px;
+              border: 2px solid #1B4332; text-align: center; }
+.next-turf h3 { color: #1B4332; margin-bottom: 5px; }
+.btn-next { background: #1B4332; color: white; padding: 12px 20px; font-size: 15px; display: block;
+             margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; cursor: pointer; border: none; width: 100%; }
+.btn-drive { background: #007bff; color: white; padding: 10px 20px; font-size: 14px; display: block;
+              margin: 8px 0; text-decoration: none; text-align: center; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="dashboard">
+  <h1>CD-8 Canvass</h1>
+  <p class="subtitle">Enter your name or code to see your assigned turfs</p>
+  <div class="name-entry" id="nameEntry">
+    <label>Your Name</label>
+    <div class="name-row">
+      <input type="text" id="nameInput" class="name-input" placeholder="First name..." />
+      <button class="btn-set-name" onclick="setVolunteerName()">Go</button>
+    </div>
+    <div class="code-entry" style="margin-top:12px; border:none; padding:0;">
+      <label>Or enter your 2-digit code</label>
+      <input type="text" id="codeInput" class="code-input" placeholder="A3" maxlength="3"
+             onkeyup="if(event.key==='Enter')lookupByCode()" />
+    </div>
+  </div>
+  <div class="name-entry" id="nameDisplay" style="display:none;">
+    <div class="name-display">
+      <span class="greeting" id="greetingText"></span>
+      <span class="change-link" onclick="changeName()">Change</span>
+    </div>
+  </div>
+  <div id="assignmentStatus"></div>
+  <div id="sessionCards"></div>
+</div>
+
+<!-- ===== TURF VIEW ===== -->
+<div id="turfview">
+  <div class="sticky-header">
+    <div class="header">
+      <h1 id="tvTitle"></h1>
+      <p id="tvSubtitle"></p>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+    <div class="stats">
+      <div><div class="num" id="statDoors">0</div>Knocked</div>
+      <div><div class="num" id="statContacts">0</div>Contacts</div>
+      <div><div class="num" id="statLeft">0</div>Left</div>
+      <div><div class="num" id="statDPH">&mdash;</div>D/Hr</div>
+    </div>
+    <div class="action-bar">
+      <a id="btnRoute" href="#" target="_blank" class="btn-route">Full Route</a>
+      <button class="btn-start" id="btnStart" onclick="startSession()">Start</button>
+      <button class="btn-pause" id="btnPause" onclick="pauseSession()">Pause</button>
+      <button class="btn-dash" onclick="showDashboard()">Dashboard</button>
+    </div>
+    <div class="route-note" id="routeNote"></div>
+    <div class="sticky-shadow"></div>
+  </div>
+  <div class="content">
+    <div class="resume-banner" id="resumeBanner">Resumed &mdash; <span id="resumeCount"></span> doors already knocked</div>
+    <div id="doorList"></div>
+    <div id="nextTurf"></div>
+  </div>
+</div>
+
+<script>
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyjBGtakc05SnyMWSMfgvhR92uxE-NdWQwlk0RYKQ3-lse03BUyif-NUtpgUvgfoc4r/exec";
+var TURFS = {"63":{"tid":63,"session":1,"city":"THORNTON","zip":"80602","n":53,"walk_min":30,"route_url":"https://www.google.com/maps/dir/39.942354994176,-104.945367357816/39.942915292095,-104.945036732721/39.94304034855,-104.945038008792/39.943076078966,-104.945038373384/39.943111809382,-104.945038737976/39.943147539798,-104.945039102568/39.943201135422,-104.945039649455/39.943272596254,-104.945040378639/39.943797219064,-104.945697645034/39.944561595227,-104.945697644943/39.94480035982,-104.94584822907/39.94507721379,-104.945850151634/39.945318726563,-104.94500117465/39.945365517276,-104.944983571533/39.945492239941,-104.944918273498/39.945546494061,-104.946592453969/39.944422161488,-104.94673652416/39.944182224506,-104.947624610936/39.945354290651,-104.946741114503/39.946056380044,-104.94747964167/39.946177228218,-104.94762911243/39.945531319948,-104.948520111159/39.944539667357,-104.948371169397/39.943883147107,-104.948374624844/39.944080111722,-104.949257144569/39.943348240658,-104.949560277192/39.943851544016,-104.946732359137","route_note":"27 of 53 stops","addrs":[{"s":1,"a":"3566 E 135TH CT","c":"THORNTON","z":"80241","lat":39.942354994176,"lon":-104.945367357816,"v":1,"w":0.0},{"s":2,"a":"3585 E 135TH CT","c":"THORNTON","z":"80241","lat":39.942471291515,"lon":-104.945262293983,"v":1,"w":0.3},{"s":3,"a":"13600 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.942915292095,"lon":-104.945036732721,"v":4,"w":0.9},{"s":4,"a":"13602 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.942933157303,"lon":-104.945036915017,"v":2,"w":0.0},{"s":5,"a":"13614 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.94304034855,"lon":-104.945038008792,"v":1,"w":0.2},{"s":6,"a":"13616 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943058213758,"lon":-104.945038191088,"v":2,"w":0.0},{"s":7,"a":"13618 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943076078966,"lon":-104.945038373384,"v":1,"w":0.0},{"s":8,"a":"13620 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943093944174,"lon":-104.94503855568,"v":1,"w":0.0},{"s":9,"a":"13622 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943111809382,"lon":-104.945038737976,"v":2,"w":0.0},{"s":10,"a":"13624 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.94312967459,"lon":-104.945038920272,"v":1,"w":0.0},{"s":11,"a":"13626 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943147539798,"lon":-104.945039102568,"v":2,"w":0.0},{"s":12,"a":"13630 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943183270214,"lon":-104.94503946716,"v":2,"w":0.1},{"s":13,"a":"13632 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943201135422,"lon":-104.945039649455,"v":1,"w":0.0},{"s":14,"a":"13638 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943254731046,"lon":-104.945040196343,"v":1,"w":0.1},{"s":15,"a":"13640 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943272596254,"lon":-104.945040378639,"v":2,"w":0.0},{"s":16,"a":"13648 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.943343610239,"lon":-104.945040645151,"v":1,"w":0.1},{"s":17,"a":"13622 MONROE ST","c":"THORNTON","z":"80602","lat":39.943797219064,"lon":-104.945697645034,"v":2,"w":1.4},{"s":18,"a":"13651 MONROE ST","c":"THORNTON","z":"80602","lat":39.944086442488,"lon":-104.945847110405,"v":1,"w":0.6},{"s":19,"a":"13696 MONROE ST","c":"THORNTON","z":"80602","lat":39.944561595227,"lon":-104.945697644943,"v":1,"w":0.9},{"s":20,"a":"13699 MONROE ST","c":"THORNTON","z":"80602","lat":39.944582254053,"lon":-104.945847110347,"v":1,"w":0.2},{"s":21,"a":"13713 MONROE ST","c":"THORNTON","z":"80602","lat":39.94480035982,"lon":-104.94584822907,"v":1,"w":0.3},{"s":22,"a":"13721 MONROE ST","c":"THORNTON","z":"80602","lat":39.944869573312,"lon":-104.945848709711,"v":1,"w":0.1},{"s":23,"a":"13745 MONROE ST","c":"THORNTON","z":"80602","lat":39.94507721379,"lon":-104.945850151634,"v":1,"w":0.3},{"s":24,"a":"13734 MONROE ST","c":"THORNTON","z":"80602","lat":39.944991306997,"lon":-104.945700085638,"v":1,"w":0.3},{"s":25,"a":"13752 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945318726563,"lon":-104.94500117465,"v":1,"w":1.3},{"s":26,"a":"13754 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945342397776,"lon":-104.944992297942,"v":1,"w":0.0},{"s":27,"a":"13756 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945365517276,"lon":-104.944983571533,"v":1,"w":0.0},{"s":28,"a":"13764 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945448539662,"lon":-104.944947927262,"v":1,"w":0.2},{"s":29,"a":"13768 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945492239941,"lon":-104.944918273498,"v":4,"w":0.1},{"s":30,"a":"13774 GARFIELD ST","c":"THORNTON","z":"80602","lat":39.945557790358,"lon":-104.944873792852,"v":1,"w":0.1},{"s":31,"a":"13756 MADISON ST","c":"THORNTON","z":"80602","lat":39.945546494061,"lon":-104.946592453969,"v":2,"w":1.9},{"s":32,"a":"13743 MADISON ST","c":"THORNTON","z":"80602","lat":39.945172875474,"lon":-104.946740352276,"v":2,"w":0.7},{"s":33,"a":"13685 MADISON ST","c":"THORNTON","z":"80602","lat":39.944422161488,"lon":-104.94673652416,"v":2,"w":1.1},{"s":34,"a":"13659 MADISON ST","c":"THORNTON","z":"80602","lat":39.944125440402,"lon":-104.946734358348,"v":5,"w":0.4},{"s":35,"a":"13661 COOK ST","c":"THORNTON","z":"80602","lat":39.944182224506,"lon":-104.947624610936,"v":1,"w":1.1},{"s":36,"a":"13734 COOK ST","c":"THORNTON","z":"80602","lat":39.945210689098,"lon":-104.947478314934,"v":1,"w":1.7},{"s":37,"a":"13759 MADISON ST","c":"THORNTON","z":"80602","lat":39.945354290651,"lon":-104.946741114503,"v":1,"w":1.0},{"s":38,"a":"13767 MADISON ST","c":"THORNTON","z":"80602","lat":39.945444998239,"lon":-104.946741495617,"v":1,"w":0.1},{"s":39,"a":"13790 COOK ST","c":"THORNTON","z":"80602","lat":39.946056380044,"lon":-104.94747964167,"v":1,"w":1.7},{"s":40,"a":"13798 COOK ST","c":"THORNTON","z":"80602","lat":39.946177228208,"lon":-104.947479641656,"v":1,"w":0.2},{"s":41,"a":"13799 COOK ST","c":"THORNTON","z":"80602","lat":39.946177228218,"lon":-104.94762911243,"v":1,"w":0.2},{"s":42,"a":"13785 COOK ST","c":"THORNTON","z":"80602","lat":39.945965743931,"lon":-104.947629112455,"v":1,"w":0.3},{"s":43,"a":"13751 ADAMS ST","c":"THORNTON","z":"80602","lat":39.945531319948,"lon":-104.948520111159,"v":2,"w":1.6},{"s":44,"a":"13756 ADAMS ST","c":"THORNTON","z":"80602","lat":39.945159430975,"lon":-104.9483706433,"v":1,"w":0.7},{"s":45,"a":"13694 ADAMS ST","c":"THORNTON","z":"80602","lat":39.944539667357,"lon":-104.948371169397,"v":1,"w":0.9},{"s":46,"a":"13670 ADAMS ST","c":"THORNTON","z":"80602","lat":39.944285530486,"lon":-104.948372506989,"v":1,"w":0.4},{"s":47,"a":"13632 ADAMS ST","c":"THORNTON","z":"80602","lat":39.943883147107,"lon":-104.948374624844,"v":2,"w":0.6},{"s":48,"a":"13647 ADAMS ST","c":"THORNTON","z":"80602","lat":39.944031856013,"lon":-104.948523308809,"v":1,"w":0.4},{"s":49,"a":"13654 STEELE CT","c":"THORNTON","z":"80602","lat":39.944080111722,"lon":-104.949257144569,"v":1,"w":0.9},{"s":50,"a":"13703 STEELE CT","c":"THORNTON","z":"80602","lat":39.944717392503,"lon":-104.949407391081,"v":1,"w":1.1},{"s":51,"a":"3224 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943348240658,"lon":-104.949560277192,"v":1,"w":2.2},{"s":52,"a":"3456 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943349254288,"lon":-104.946793864383,"v":1,"w":3.1},{"s":53,"a":"13635 MADISON ST","c":"THORNTON","z":"80602","lat":39.943851544016,"lon":-104.946732359137,"v":1,"w":0.8}]},"410":{"tid":410,"session":1,"city":"THORNTON","zip":"80602","n":19,"walk_min":22,"route_url":"https://www.google.com/maps/dir/39.959608120438,-104.930271817438/39.959824186489,-104.930971390927/39.95961938194,-104.930973919402/39.959143720012,-104.930977117172/39.958943279479,-104.930978310294/39.958010251134,-104.930422501793/39.958488897894,-104.929533631111/39.958718511279,-104.927938450941/39.958959039615,-104.927122629182/39.958319540138,-104.927124807547/39.95829376877,-104.926198406164/39.958548988847,-104.926047225584/39.959456842047,-104.926331456795/39.959547245735,-104.927372088504/39.960504854551,-104.928672368241/39.960333844064,-104.928989420049/39.960340911175,-104.929819725671/39.960980250706,-104.930113558239/39.96034543413,-104.930518514633","route_note":"All 19 stops","addrs":[{"s":1,"a":"4883 E 144TH LN","c":"THORNTON","z":"80602","lat":39.959608120438,"lon":-104.930271817438,"v":4,"w":0.0},{"s":2,"a":"14479 DAHLIA ST","c":"THORNTON","z":"80602","lat":39.959824186489,"lon":-104.930971390927,"v":2,"w":1.1},{"s":3,"a":"14469 DAHLIA ST","c":"THORNTON","z":"80602","lat":39.95961938194,"lon":-104.930973919402,"v":3,"w":0.3},{"s":4,"a":"14449 DAHLIA ST","c":"THORNTON","z":"80602","lat":39.959143720012,"lon":-104.930977117172,"v":1,"w":0.7},{"s":5,"a":"14439 DAHLIA ST","c":"THORNTON","z":"80602","lat":39.958943279479,"lon":-104.930978310294,"v":2,"w":0.3},{"s":6,"a":"4868 E 144TH PL","c":"THORNTON","z":"80602","lat":39.958010251134,"lon":-104.930422501793,"v":1,"w":2.0},{"s":7,"a":"14424 ELM ST","c":"THORNTON","z":"80602","lat":39.958488897894,"lon":-104.929533631111,"v":2,"w":1.7},{"s":8,"a":"14440 FOREST ST","c":"THORNTON","z":"80602","lat":39.958718511279,"lon":-104.927938450941,"v":1,"w":2.1},{"s":9,"a":"14469 GLENCOE ST","c":"THORNTON","z":"80602","lat":39.958959039615,"lon":-104.927122629182,"v":3,"w":1.3},{"s":10,"a":"14419 GLENCOE ST","c":"THORNTON","z":"80602","lat":39.958319540138,"lon":-104.927124807547,"v":3,"w":0.9},{"s":11,"a":"14417 GRAPE ST","c":"THORNTON","z":"80602","lat":39.95829376877,"lon":-104.926198406164,"v":1,"w":1.1},{"s":12,"a":"14436 GRAPE ST","c":"THORNTON","z":"80602","lat":39.958548988847,"lon":-104.926047225584,"v":1,"w":0.5},{"s":13,"a":"5381 E 145TH AVE","c":"THORNTON","z":"80602","lat":39.959456842047,"lon":-104.926331456795,"v":1,"w":1.6},{"s":14,"a":"5241 E 145TH AVE","c":"THORNTON","z":"80602","lat":39.959547245735,"lon":-104.927372088504,"v":1,"w":1.3},{"s":15,"a":"14544 ELM ST","c":"THORNTON","z":"80602","lat":39.960504854551,"lon":-104.928672368241,"v":2,"w":2.9},{"s":16,"a":"14515 ELM ST","c":"THORNTON","z":"80602","lat":39.960333844064,"lon":-104.928989420049,"v":3,"w":0.6},{"s":17,"a":"4915 E 145TH AVE","c":"THORNTON","z":"80602","lat":39.960340911175,"lon":-104.929819725671,"v":2,"w":0.9},{"s":18,"a":"14536 EUDORA ST","c":"THORNTON","z":"80602","lat":39.960980250706,"lon":-104.930113558239,"v":2,"w":1.3},{"s":19,"a":"4835 E 145TH AVE","c":"THORNTON","z":"80602","lat":39.96034543413,"lon":-104.930518514633,"v":1,"w":1.4}]},"130":{"tid":130,"session":2,"city":"THORNTON","zip":"80602","n":46,"walk_min":44,"route_url":"https://www.google.com/maps/dir/39.946433927064,-104.948695739958/39.94755881137,-104.949463364802/39.947716653936,-104.950316963359/39.948456515551,-104.951210759293/39.949787786127,-104.951707647862/39.949254895246,-104.951058671222/39.948502434498,-104.950169940313/39.948266748891,-104.949503344654/39.948139323401,-104.948899235524/39.948784743281,-104.948679070437/39.948762665628,-104.949499177228/39.950778975712,-104.949448833287/39.951158844779,-104.949136925043/39.951665253273,-104.94857706581/39.950746360663,-104.947879513226/39.950537844823,-104.948549303374/39.949862844915,-104.948542615696/39.94986621904,-104.948081961598/39.948824105482,-104.947705341183/39.948744645182,-104.9461034014/39.948519385073,-104.94638271962/39.947954844976,-104.945680786166/39.947659425502,-104.948527518971/39.947695036234,-104.948698999615","route_note":"24 of 46 stops","addrs":[{"s":1,"a":"3303 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.946433927064,"lon":-104.948695739958,"v":2,"w":0.0},{"s":2,"a":"13824 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.947435574058,"lon":-104.948835971686,"v":1,"w":1.6},{"s":3,"a":"13857 ADAMS ST","c":"THORNTON","z":"80602","lat":39.94755881137,"lon":-104.949463364802,"v":1,"w":0.9},{"s":4,"a":"13848 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.947534928803,"lon":-104.950168533488,"v":1,"w":0.8},{"s":5,"a":"13861 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.947716653936,"lon":-104.950316963359,"v":1,"w":0.4},{"s":6,"a":"13895 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.94822240507,"lon":-104.951210360594,"v":1,"w":1.7},{"s":7,"a":"13905 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.948456515551,"lon":-104.951210759293,"v":1,"w":0.3},{"s":8,"a":"13953 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.949084125449,"lon":-104.952085982399,"v":2,"w":1.9},{"s":9,"a":"2931 E 140TH AVE","c":"THORNTON","z":"80602","lat":39.949787786127,"lon":-104.951707647862,"v":2,"w":1.5},{"s":10,"a":"3021 E 140TH AVE","c":"THORNTON","z":"80602","lat":39.949781845093,"lon":-104.950933426027,"v":1,"w":0.9},{"s":11,"a":"13966 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.949254895246,"lon":-104.951058671222,"v":1,"w":0.9},{"s":12,"a":"13935 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.948842967221,"lon":-104.951209496333,"v":2,"w":0.8},{"s":13,"a":"13908 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.948502434498,"lon":-104.950169940313,"v":2,"w":1.7},{"s":14,"a":"13901 ADAMS ST","c":"THORNTON","z":"80602","lat":39.948337594139,"lon":-104.949502749307,"v":1,"w":1.0},{"s":15,"a":"13897 ADAMS ST","c":"THORNTON","z":"80602","lat":39.948266748891,"lon":-104.949503344654,"v":1,"w":0.1},{"s":16,"a":"13889 ADAMS ST","c":"THORNTON","z":"80602","lat":39.948125058395,"lon":-104.949504535347,"v":1,"w":0.2},{"s":17,"a":"3290 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948139323401,"lon":-104.948899235524,"v":1,"w":0.7},{"s":18,"a":"13918 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.948599542949,"lon":-104.948451274092,"v":2,"w":1.2},{"s":19,"a":"13942 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.948784743281,"lon":-104.948679070437,"v":2,"w":0.5},{"s":20,"a":"13958 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.948908210169,"lon":-104.948830934667,"v":1,"w":0.4},{"s":21,"a":"13925 ADAMS ST","c":"THORNTON","z":"80602","lat":39.948762665628,"lon":-104.949499177228,"v":2,"w":1.0},{"s":22,"a":"13973 ADAMS ST","c":"THORNTON","z":"80602","lat":39.949461602311,"lon":-104.949497586949,"v":1,"w":1.0},{"s":23,"a":"14021 ADAMS ST","c":"THORNTON","z":"80602","lat":39.950778975712,"lon":-104.949448833287,"v":2,"w":2.0},{"s":24,"a":"14041 ADAMS ST","c":"THORNTON","z":"80602","lat":39.950959043258,"lon":-104.949469616542,"v":1,"w":0.3},{"s":25,"a":"3313 E 140TH DR","c":"THORNTON","z":"80602","lat":39.951158844779,"lon":-104.949136925043,"v":1,"w":0.7},{"s":26,"a":"14081 ADAMS ST","c":"THORNTON","z":"80602","lat":39.951467093475,"lon":-104.949469616708,"v":2,"w":0.8},{"s":27,"a":"3344 E 141ST AVE","c":"THORNTON","z":"80602","lat":39.951665253273,"lon":-104.94857706581,"v":1,"w":1.3},{"s":28,"a":"3363 E 140TH DR","c":"THORNTON","z":"80602","lat":39.951158844726,"lon":-104.948373548923,"v":1,"w":1.0},{"s":29,"a":"14021 COOK ST","c":"THORNTON","z":"80602","lat":39.950746360663,"lon":-104.947879513226,"v":1,"w":1.2},{"s":30,"a":"14012 COOK ST","c":"THORNTON","z":"80602","lat":39.95071785425,"lon":-104.947733681257,"v":1,"w":0.2},{"s":31,"a":"3351 E 140TH PL","c":"THORNTON","z":"80602","lat":39.950537844823,"lon":-104.948549303374,"v":1,"w":1.2},{"s":32,"a":"3320 E 140TH PL","c":"THORNTON","z":"80602","lat":39.950428283854,"lon":-104.948948555414,"v":2,"w":0.6},{"s":33,"a":"3301 E 140TH AVE","c":"THORNTON","z":"80602","lat":39.949862844915,"lon":-104.948542615696,"v":2,"w":1.3},{"s":34,"a":"13995 COOK ST","c":"THORNTON","z":"80602","lat":39.949602054429,"lon":-104.948518618193,"v":1,"w":0.4},{"s":35,"a":"3337 E 140TH AVE","c":"THORNTON","z":"80602","lat":39.94986621904,"lon":-104.948081961598,"v":2,"w":0.9},{"s":36,"a":"13941 COOK ST","c":"THORNTON","z":"80602","lat":39.949079499471,"lon":-104.948014112736,"v":2,"w":1.2},{"s":37,"a":"13925 COOK ST","c":"THORNTON","z":"80602","lat":39.948824105482,"lon":-104.947705341183,"v":2,"w":0.7},{"s":38,"a":"13916 COOK ST","c":"THORNTON","z":"80602","lat":39.948736257411,"lon":-104.947370413852,"v":3,"w":0.5},{"s":39,"a":"3539 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948744645182,"lon":-104.9461034014,"v":1,"w":1.4},{"s":40,"a":"3520 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948593123608,"lon":-104.946232955218,"v":2,"w":0.4},{"s":41,"a":"13898 MADISON ST","c":"THORNTON","z":"80602","lat":39.948519385073,"lon":-104.94638271962,"v":1,"w":0.3},{"s":42,"a":"13882 MADISON ST","c":"THORNTON","z":"80602","lat":39.948345114393,"lon":-104.946197205722,"v":1,"w":0.5},{"s":43,"a":"3547 E 138TH PL","c":"THORNTON","z":"80602","lat":39.947954844976,"lon":-104.945680786166,"v":1,"w":1.2},{"s":44,"a":"13845 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.947781823097,"lon":-104.948573826244,"v":1,"w":3.5},{"s":45,"a":"13848 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.947659425502,"lon":-104.948527518971,"v":2,"w":0.2},{"s":46,"a":"13837 ADAMS CIR","c":"THORNTON","z":"80602","lat":39.947695036234,"lon":-104.948698999615,"v":1,"w":0.2}]},"339":{"tid":339,"session":2,"city":"THORNTON","zip":"80602","n":31,"walk_min":24,"route_url":"https://www.google.com/maps/dir/39.955094356656,-104.947070667483/39.954983703905,-104.947344823191/39.954985766162,-104.94748763375/39.955108792452,-104.948070341397/39.95512276302,-104.949378630916/39.955505602907,-104.949377554917/39.956003868992,-104.949619443159/39.956121446353,-104.950444695791/39.956732252697,-104.950263878976/39.956846844087,-104.95038813433/39.956846844122,-104.950885155801/39.95684684414,-104.951133666536/39.956010947357,-104.951576572976/39.955905399263,-104.952012121025/39.95558592863,-104.951862628772/39.955394465715,-104.951004701888/39.955279650688,-104.95094332812/39.955276233098,-104.950000091593/39.955259103864,-104.949528120161/39.954546062446,-104.950030655298/39.954343087782,-104.94881993102/39.954347157101,-104.948690729855/39.954347364096,-104.947910923869/39.954344400279,-104.947652332419/39.954353844129,-104.946102314222/39.95497725268,-104.946572420641/39.955852002762,-104.946642276081/39.955861469355,-104.947507307666/39.955859056105,-104.947649690008/39.955742252669,-104.947918598164/39.955733258587,-104.947075600791","route_note":"31 of 31 stops","addrs":[{"s":1,"a":"3485 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.955094356656,"lon":-104.947070667483,"v":2,"w":0.0},{"s":2,"a":"3446 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.954983703905,"lon":-104.947344823191,"v":1,"w":0.5},{"s":3,"a":"3426 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.954985766162,"lon":-104.94748763375,"v":2,"w":0.2},{"s":4,"a":"3345 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.955108792452,"lon":-104.948070341397,"v":2,"w":0.8},{"s":5,"a":"14278 ADAMS ST","c":"THORNTON","z":"80602","lat":39.95512276302,"lon":-104.949378630916,"v":1,"w":1.5},{"s":6,"a":"14308 ADAMS ST","c":"THORNTON","z":"80602","lat":39.955505602907,"lon":-104.949377554917,"v":2,"w":0.6},{"s":7,"a":"3094 E 143RD PL","c":"THORNTON","z":"80602","lat":39.956003868992,"lon":-104.949619443159,"v":1,"w":1.0},{"s":8,"a":"3021 E 143RD PL","c":"THORNTON","z":"80602","lat":39.956121446353,"lon":-104.950444695791,"v":2,"w":1.1},{"s":9,"a":"3044 E 143RD DR","c":"THORNTON","z":"80602","lat":39.956732252697,"lon":-104.950263878976,"v":2,"w":1.1},{"s":10,"a":"3033 E 143RD DR","c":"THORNTON","z":"80602","lat":39.956846844087,"lon":-104.95038813433,"v":2,"w":0.3},{"s":11,"a":"2985 E 143RD DR","c":"THORNTON","z":"80602","lat":39.956846844122,"lon":-104.950885155801,"v":3,"w":0.6},{"s":12,"a":"3361 E 143RD DR","c":"THORNTON","z":"80602","lat":39.95684684414,"lon":-104.951133666536,"v":2,"w":0.3},{"s":13,"a":"3012 E 143RD PL","c":"THORNTON","z":"80602","lat":39.956010947357,"lon":-104.951576572976,"v":1,"w":1.7},{"s":14,"a":"14339 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.955905399263,"lon":-104.952012121025,"v":1,"w":0.6},{"s":15,"a":"14330 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.95558592863,"lon":-104.951862628772,"v":2,"w":0.6},{"s":16,"a":"3037 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.955394465715,"lon":-104.951004701888,"v":1,"w":1.2},{"s":17,"a":"2978 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.955279650688,"lon":-104.95094332812,"v":3,"w":0.2},{"s":18,"a":"3058 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.955276233098,"lon":-104.950000091593,"v":1,"w":1.1},{"s":19,"a":"14297 ADAMS ST","c":"THORNTON","z":"80602","lat":39.955259103864,"lon":-104.949528120161,"v":2,"w":0.6},{"s":20,"a":"3056 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954546062446,"lon":-104.950030655298,"v":1,"w":1.6},{"s":21,"a":"3357 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954343087782,"lon":-104.94881993102,"v":1,"w":1.7},{"s":22,"a":"3367 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954347157101,"lon":-104.948690729855,"v":1,"w":0.2},{"s":23,"a":"3427 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954347364096,"lon":-104.947910923869,"v":1,"w":0.9},{"s":24,"a":"3447 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954344400279,"lon":-104.947652332419,"v":1,"w":0.3},{"s":25,"a":"3577 E 142ND DR","c":"THORNTON","z":"80602","lat":39.954353844129,"lon":-104.946102314222,"v":2,"w":1.8},{"s":26,"a":"3516 E 143RD AVE","c":"THORNTON","z":"80602","lat":39.95497725268,"lon":-104.946572420641,"v":2,"w":1.4},{"s":27,"a":"3533 E 143RD PL","c":"THORNTON","z":"80602","lat":39.955852002762,"lon":-104.946642276081,"v":2,"w":1.4},{"s":28,"a":"3423 E 143RD PL","c":"THORNTON","z":"80602","lat":39.955861469355,"lon":-104.947507307666,"v":1,"w":1.0},{"s":29,"a":"3403 E 143RD PL","c":"THORNTON","z":"80602","lat":39.955859056105,"lon":-104.947649690008,"v":1,"w":0.2},{"s":30,"a":"3364 E 143RD PL","c":"THORNTON","z":"80602","lat":39.955742252669,"lon":-104.947918598164,"v":1,"w":0.5},{"s":31,"a":"3484 E 143RD PL","c":"THORNTON","z":"80602","lat":39.955733258587,"lon":-104.947075600791,"v":1,"w":1.0}]},"27":{"tid":27,"session":3,"city":"THORNTON","zip":"80241","n":59,"walk_min":44,"route_url":"https://www.google.com/maps/dir/39.931497576816,-104.942295615699/39.930444994395,-104.942012394496/39.930522459402,-104.941703468073/39.930627009108,-104.941290247719/39.930397755252,-104.940976545219/39.929873847154,-104.941374943278/39.929506203391,-104.941563974732/39.929393551489,-104.940914163475/39.929188510202,-104.94170709726/39.928928847376,-104.942691140999/39.929559160234,-104.942381573426/39.92981686536,-104.942383414147/39.930210833943,-104.942500440485/39.930067155673,-104.944545199255/39.931141148075,-104.945366426832/39.932931266946,-104.945057491174/39.932589704148,-104.943630090737/39.931071611119,-104.944138368926/39.931164339204,-104.942955844347/39.931699015378,-104.943294762424/39.932063716618,-104.94262822977/39.932171252221,-104.942458394968/39.932496825126,-104.942662407502/39.933422341329,-104.943085826062/39.933564577932,-104.941640928708/39.932570464821,-104.941177993477/39.932189752549,-104.941022349979/39.931615190217,-104.94149859884/39.931635415826,-104.941831761008/39.931568621522,-104.942049691673","route_note":"30 of 59 stops","addrs":[{"s":1,"a":"3805 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931497576816,"lon":-104.942295615699,"v":1,"w":0.0},{"s":2,"a":"3803 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931490472346,"lon":-104.942320208101,"v":1,"w":0.0},{"s":3,"a":"12885 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930444994395,"lon":-104.942012394496,"v":2,"w":1.9},{"s":4,"a":"12890 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930378788711,"lon":-104.941794384763,"v":1,"w":0.3},{"s":5,"a":"12891 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930522459402,"lon":-104.941703468073,"v":2,"w":0.3},{"s":6,"a":"12894 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930448488515,"lon":-104.941518904527,"v":1,"w":0.3},{"s":7,"a":"12899 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930627009108,"lon":-104.941290247719,"v":1,"w":0.5},{"s":8,"a":"12919 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930676113402,"lon":-104.941137278694,"v":1,"w":0.2},{"s":9,"a":"12880 HARRISON ST","c":"THORNTON","z":"80241","lat":39.930397755252,"lon":-104.940976545219,"v":2,"w":0.6},{"s":10,"a":"12846 HARRISON ST","c":"THORNTON","z":"80241","lat":39.930022687502,"lon":-104.940913713637,"v":1,"w":0.6},{"s":11,"a":"12810 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929873847154,"lon":-104.941374943278,"v":1,"w":0.7},{"s":12,"a":"12818 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.92977314709,"lon":-104.941654210575,"v":1,"w":0.5},{"s":13,"a":"12813 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929506203391,"lon":-104.941563974732,"v":1,"w":0.5},{"s":14,"a":"12812 HARRISON ST","c":"THORNTON","z":"80241","lat":39.929503765728,"lon":-104.940912778913,"v":1,"w":0.7},{"s":15,"a":"12810 HARRISON ST","c":"THORNTON","z":"80241","lat":39.929393551489,"lon":-104.940914163475,"v":1,"w":0.2},{"s":16,"a":"12830 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929389308801,"lon":-104.941710341696,"v":1,"w":0.9},{"s":17,"a":"12834 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929188510202,"lon":-104.94170709726,"v":1,"w":0.3},{"s":18,"a":"12843 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.928831283414,"lon":-104.942120111731,"v":1,"w":1.0},{"s":19,"a":"3713 E 128TH CT","c":"THORNTON","z":"80241","lat":39.928928847376,"lon":-104.942691140999,"v":1,"w":0.8},{"s":20,"a":"3717 E 128TH CT","c":"THORNTON","z":"80241","lat":39.928928847374,"lon":-104.942677466753,"v":2,"w":0.0},{"s":21,"a":"12862 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929559160234,"lon":-104.942381573426,"v":2,"w":1.3},{"s":22,"a":"12866 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.929688012797,"lon":-104.942382493786,"v":1,"w":0.2},{"s":23,"a":"12870 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.92981686536,"lon":-104.942383414147,"v":1,"w":0.2},{"s":24,"a":"12877 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930288837911,"lon":-104.942433250832,"v":1,"w":0.7},{"s":25,"a":"12875 JACKSON CIR","c":"THORNTON","z":"80241","lat":39.930210833943,"lon":-104.942500440485,"v":1,"w":0.2},{"s":26,"a":"12870 GARFIELD CIR","c":"THORNTON","z":"80241","lat":39.929950392024,"lon":-104.944363889122,"v":1,"w":2.5},{"s":27,"a":"12867 GARFIELD CIR","c":"THORNTON","z":"80241","lat":39.930067155673,"lon":-104.944545199255,"v":1,"w":0.4},{"s":28,"a":"12850 GARFIELD CIR","c":"THORNTON","z":"80241","lat":39.929896293102,"lon":-104.945231470445,"v":2,"w":1.0},{"s":29,"a":"3581 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931141148075,"lon":-104.945366426832,"v":3,"w":2.0},{"s":30,"a":"13048 DYANNA DR","c":"THORNTON","z":"80241","lat":39.932322285183,"lon":-104.945524934515,"v":1,"w":1.9},{"s":31,"a":"13122 MONROE CT","c":"THORNTON","z":"80241","lat":39.932931266946,"lon":-104.945057491174,"v":1,"w":1.4},{"s":32,"a":"13097 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.933050317829,"lon":-104.944118893282,"v":1,"w":1.2},{"s":33,"a":"13068 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.932589704148,"lon":-104.943630090737,"v":1,"w":1.2},{"s":34,"a":"13042 MONROE DR","c":"THORNTON","z":"80241","lat":39.931879631671,"lon":-104.944243099387,"v":1,"w":1.7},{"s":35,"a":"3700 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931071611119,"lon":-104.944138368926,"v":2,"w":1.3},{"s":36,"a":"3720 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931055929057,"lon":-104.94343659892,"v":1,"w":0.8},{"s":37,"a":"3740 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931164339204,"lon":-104.942955844347,"v":1,"w":0.7},{"s":38,"a":"3746 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931187545851,"lon":-104.942883903729,"v":1,"w":0.1},{"s":39,"a":"13024 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.931699015378,"lon":-104.943294762424,"v":1,"w":1.2},{"s":40,"a":"13044 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.932111982647,"lon":-104.943409401178,"v":2,"w":0.7},{"s":41,"a":"13043 JACKSON DR","c":"THORNTON","z":"80241","lat":39.932063716618,"lon":-104.94262822977,"v":1,"w":0.9},{"s":42,"a":"13039 JACKSON DR","c":"THORNTON","z":"80241","lat":39.932006045279,"lon":-104.942606048495,"v":2,"w":0.1},{"s":43,"a":"3812 E 130TH CIR","c":"THORNTON","z":"80241","lat":39.932171252221,"lon":-104.942458394968,"v":1,"w":0.4},{"s":44,"a":"3816 E 130TH CIR","c":"THORNTON","z":"80241","lat":39.932175521944,"lon":-104.942443184079,"v":1,"w":0.0},{"s":45,"a":"13052 JACKSON DR","c":"THORNTON","z":"80241","lat":39.932496825126,"lon":-104.942662407502,"v":1,"w":0.7},{"s":46,"a":"3818 E 130TH CT","c":"THORNTON","z":"80241","lat":39.932980185577,"lon":-104.942802590306,"v":1,"w":0.9},{"s":47,"a":"13096 JACKSON DR","c":"THORNTON","z":"80241","lat":39.933422341329,"lon":-104.943085826062,"v":2,"w":1.0},{"s":48,"a":"13094 HARRISON DR","c":"THORNTON","z":"80241","lat":39.933755602687,"lon":-104.941730471527,"v":1,"w":2.0},{"s":49,"a":"13084 HARRISON DR","c":"THORNTON","z":"80241","lat":39.933564577932,"lon":-104.941640928708,"v":1,"w":0.4},{"s":50,"a":"13054 HARRISON DR","c":"THORNTON","z":"80241","lat":39.932990876262,"lon":-104.941374415141,"v":1,"w":1.1},{"s":51,"a":"13032 HARRISON DR","c":"THORNTON","z":"80241","lat":39.932570464821,"lon":-104.941177993477,"v":1,"w":0.8},{"s":52,"a":"13016 HARRISON DR","c":"THORNTON","z":"80241","lat":39.932260532932,"lon":-104.941044514724,"v":1,"w":0.6},{"s":53,"a":"13010 HARRISON DR","c":"THORNTON","z":"80241","lat":39.932189752549,"lon":-104.941022349979,"v":1,"w":0.1},{"s":54,"a":"13004 HARRISON DR","c":"THORNTON","z":"80241","lat":39.932112141382,"lon":-104.941009297449,"v":1,"w":0.1},{"s":55,"a":"3860 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931615190217,"lon":-104.94149859884,"v":1,"w":1.3},{"s":56,"a":"3845 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931642975926,"lon":-104.941807400683,"v":1,"w":0.4},{"s":57,"a":"3843 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931635415826,"lon":-104.941831761008,"v":3,"w":0.0},{"s":58,"a":"3820 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931482888473,"lon":-104.941924904531,"v":1,"w":0.3},{"s":59,"a":"3825 DYANNA DR","c":"THORNTON","z":"80241","lat":39.931568621522,"lon":-104.942049691673,"v":1,"w":0.3}]},"470":{"tid":470,"session":3,"city":"THORNTON","zip":"80241","n":10,"walk_min":4,"route_url":"https://www.google.com/maps/dir/39.925226625763,-104.923088111645/39.925241255124,-104.923219955719/39.925241255134,-104.92336633894/39.925357153263,-104.923480746785/39.925243436522,-104.923515339667/39.924710298587,-104.92412298554/39.924008781141,-104.924514834331/39.923894661574,-104.924562988812/39.923891966191,-104.924293452451/39.924711116984,-104.924247789771","route_note":"All 10 stops","addrs":[{"s":1,"a":"12557 HUDSON CT","c":"THORNTON","z":"80241","lat":39.925226625763,"lon":-104.923088111645,"v":2,"w":0.0},{"s":2,"a":"12567 HUDSON CT","c":"THORNTON","z":"80241","lat":39.925241255124,"lon":-104.923219955719,"v":2,"w":0.2},{"s":3,"a":"12577 HUDSON CT","c":"THORNTON","z":"80241","lat":39.925241255134,"lon":-104.92336633894,"v":1,"w":0.2},{"s":4,"a":"12584 HUDSON CT","c":"THORNTON","z":"80241","lat":39.925357153263,"lon":-104.923480746785,"v":1,"w":0.3},{"s":5,"a":"12587 HUDSON CT","c":"THORNTON","z":"80241","lat":39.925243436522,"lon":-104.923515339667,"v":3,"w":0.2},{"s":6,"a":"5475 E 125TH PL","c":"THORNTON","z":"80241","lat":39.924710298587,"lon":-104.92412298554,"v":2,"w":1.5},{"s":7,"a":"5443 E 125TH DR","c":"THORNTON","z":"80241","lat":39.924008781141,"lon":-104.924514834331,"v":3,"w":1.5},{"s":8,"a":"5442 E 125TH DR","c":"THORNTON","z":"80241","lat":39.923894661574,"lon":-104.924562988812,"v":1,"w":0.2},{"s":9,"a":"5462 E 125TH DR","c":"THORNTON","z":"80241","lat":39.923891966191,"lon":-104.924293452451,"v":2,"w":0.3},{"s":10,"a":"5465 E 125TH PL","c":"THORNTON","z":"80241","lat":39.924711116984,"lon":-104.924247789771,"v":2,"w":1.3}]},"145":{"tid":145,"session":4,"city":"THORNTON","zip":"80602","n":45,"walk_min":41,"route_url":"https://www.google.com/maps/dir/39.943972369526,-104.9530696091/39.943340254643,-104.951855835873/39.944033254477,-104.950836643462/39.944029459719,-104.952289294896/39.944145704158,-104.952596234075/39.944901930353,-104.952786438112/39.944951275833,-104.952528983806/39.945210047442,-104.952605858116/39.945399869583,-104.952468987294/39.945386672512,-104.952258528899/39.945621114134,-104.951382305658/39.945772722315,-104.951541266256/39.945979805428,-104.95068612104/39.945505676934,-104.950159437004/39.945123955686,-104.950306610607/39.944923979794,-104.950155067162/39.94601856836,-104.949347498988/39.946044755018,-104.94913725399/39.947084387858,-104.950166377014/39.946972614347,-104.951053354874/39.947141576498,-104.951054372698/39.947208632167,-104.951204253648/39.947497460121,-104.952092231108/39.947977905064,-104.952088813138/39.948568855382,-104.952091034127/39.949191755702,-104.952839136972/39.948294812668,-104.953781181284/39.948406583984,-104.953966686296/39.948404845507,-104.954147723588/39.948305504458,-104.954520813399/39.948030679294,-104.954993525876/39.947784207676,-104.954853163919/39.947615254186,-104.953692710707/39.947615254172,-104.9534958779/39.947248916606,-104.952837424817/39.946839716821,-104.952837553685/39.946855743345,-104.952097244596/39.947176601733,-104.952094737852/39.946520696782,-104.952027378816/39.946372532051,-104.951947122948/39.946161426472,-104.952629363463/39.946312813646,-104.952887974541/39.945392254494,-104.953734934049/39.945370431047,-104.953518087473/39.944674515449,-104.952919096826","route_note":"45 of 45 stops","addrs":[{"s":1,"a":"13635 DETROIT ST","c":"THORNTON","z":"80602","lat":39.943972369526,"lon":-104.9530696091,"v":2,"w":0.0},{"s":2,"a":"2942 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943340254643,"lon":-104.951855835873,"v":2,"w":2.3},{"s":3,"a":"3022 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944033254477,"lon":-104.950836643462,"v":1,"w":2.2},{"s":4,"a":"2882 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944029459719,"lon":-104.952289294896,"v":1,"w":1.6},{"s":5,"a":"2843 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944145704158,"lon":-104.952596234075,"v":1,"w":0.5},{"s":6,"a":"13703 DETROIT ST","c":"THORNTON","z":"80602","lat":39.944901930353,"lon":-104.952786438112,"v":2,"w":1.3},{"s":7,"a":"13714 DETROIT ST","c":"THORNTON","z":"80602","lat":39.944951275833,"lon":-104.952528983806,"v":3,"w":0.4},{"s":8,"a":"13719 DETROIT ST","c":"THORNTON","z":"80602","lat":39.945210047442,"lon":-104.952605858116,"v":1,"w":0.5},{"s":9,"a":"13727 DETROIT ST","c":"THORNTON","z":"80602","lat":39.945399869583,"lon":-104.952468987294,"v":2,"w":0.4},{"s":10,"a":"13754 DETROIT ST","c":"THORNTON","z":"80602","lat":39.945386672512,"lon":-104.952258528899,"v":1,"w":0.3},{"s":11,"a":"13793 MILWAUKEE CT","c":"THORNTON","z":"80602","lat":39.945621114134,"lon":-104.951382305658,"v":1,"w":1.3},{"s":12,"a":"13759 DETROIT ST","c":"THORNTON","z":"80602","lat":39.945772722315,"lon":-104.951541266256,"v":1,"w":0.4},{"s":13,"a":"13791 DETROIT ST","c":"THORNTON","z":"80602","lat":39.945979805428,"lon":-104.95068612104,"v":2,"w":1.3},{"s":14,"a":"13750 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.945505676934,"lon":-104.950159437004,"v":1,"w":1.3},{"s":15,"a":"13737 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.945123955686,"lon":-104.950306610607,"v":1,"w":0.7},{"s":16,"a":"13714 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.944923979794,"lon":-104.950155067162,"v":1,"w":0.5},{"s":17,"a":"3225 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.94601856836,"lon":-104.949347498988,"v":1,"w":2.5},{"s":18,"a":"3242 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.946044755018,"lon":-104.94913725399,"v":1,"w":0.3},{"s":19,"a":"13818 ST PAUL ST","c":"THORNTON","z":"80602","lat":39.947084387858,"lon":-104.950166377014,"v":1,"w":2.7},{"s":20,"a":"13820 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.946972614347,"lon":-104.951053354874,"v":2,"w":1.2},{"s":21,"a":"13830 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.947141576498,"lon":-104.951054372698,"v":1,"w":0.2},{"s":22,"a":"13835 MILWAUKEE ST","c":"THORNTON","z":"80602","lat":39.947208632167,"lon":-104.951204253648,"v":2,"w":0.3},{"s":23,"a":"13859 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.947497460121,"lon":-104.952092231108,"v":2,"w":1.4},{"s":24,"a":"13883 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.947977905064,"lon":-104.952088813138,"v":1,"w":0.7},{"s":25,"a":"13913 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.948568855382,"lon":-104.952091034127,"v":1,"w":0.9},{"s":26,"a":"13942 DETROIT ST","c":"THORNTON","z":"80602","lat":39.949191755702,"lon":-104.952839136972,"v":1,"w":1.8},{"s":27,"a":"2754 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948294812668,"lon":-104.953781181284,"v":1,"w":2.4},{"s":28,"a":"2745 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948406583984,"lon":-104.953966686296,"v":1,"w":0.4},{"s":29,"a":"2735 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948404845507,"lon":-104.954147723588,"v":1,"w":0.2},{"s":30,"a":"2714 E 139TH AVE","c":"THORNTON","z":"80602","lat":39.948305504458,"lon":-104.954520813399,"v":1,"w":0.6},{"s":31,"a":"13921 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.948030679294,"lon":-104.954993525876,"v":1,"w":0.9},{"s":32,"a":"2703 E 139TH DR","c":"THORNTON","z":"80602","lat":39.947784207676,"lon":-104.954853163919,"v":1,"w":0.5},{"s":33,"a":"2762 E 139TH DR","c":"THORNTON","z":"80602","lat":39.947615254186,"lon":-104.953692710707,"v":2,"w":1.6},{"s":34,"a":"2772 E 139TH DR","c":"THORNTON","z":"80602","lat":39.947615254172,"lon":-104.9534958779,"v":1,"w":0.2},{"s":35,"a":"13850 DETROIT ST","c":"THORNTON","z":"80602","lat":39.947248916606,"lon":-104.952837424817,"v":1,"w":1.3},{"s":36,"a":"13834 DETROIT ST","c":"THORNTON","z":"80602","lat":39.946839716821,"lon":-104.952837553685,"v":1,"w":0.6},{"s":37,"a":"13827 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.946855743345,"lon":-104.952097244596,"v":1,"w":0.9},{"s":38,"a":"13843 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.947176601733,"lon":-104.952094737852,"v":3,"w":0.5},{"s":39,"a":"13811 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.946520696782,"lon":-104.952027378816,"v":3,"w":1.0},{"s":40,"a":"13803 FILLMORE ST","c":"THORNTON","z":"80602","lat":39.946372532051,"lon":-104.951947122948,"v":1,"w":0.3},{"s":41,"a":"13802 DETROIT ST","c":"THORNTON","z":"80602","lat":39.946161426472,"lon":-104.952629363463,"v":2,"w":1.1},{"s":42,"a":"13831 DETROIT ST","c":"THORNTON","z":"80602","lat":39.946312813646,"lon":-104.952887974541,"v":1,"w":0.5},{"s":43,"a":"2686 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.945392254494,"lon":-104.953734934049,"v":2,"w":2.3},{"s":44,"a":"2696 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.945370431047,"lon":-104.953518087473,"v":3,"w":0.3},{"s":45,"a":"13683 DETROIT ST","c":"THORNTON","z":"80602","lat":39.944674515449,"lon":-104.952919096826,"v":4,"w":1.7}]},"327":{"tid":327,"session":4,"city":"THORNTON","zip":"80241","n":32,"walk_min":37,"route_url":"https://www.google.com/maps/dir/39.935764959783,-104.947182308231/39.935593954254,-104.945477551372/39.935367744091,-104.945161271315/39.935251067935,-104.944996217287/39.93510661269,-104.944785356888/39.934640572795,-104.945427241578/39.934604633404,-104.94559327302/39.934242502567,-104.944874122561/39.933942556314,-104.944682117003/39.933188022227,-104.945305956191/39.933634232409,-104.944545053506/39.93379385051,-104.944610160863/39.933793252222,-104.941906922362/39.936086254932,-104.941766307517/39.936086254962,-104.942187663449/39.936200846347,-104.942240332927/39.936200846362,-104.942451010892/39.934892658865,-104.943178255489/39.934880615538,-104.94332985883/39.93471400649,-104.94393746373/39.936837684068,-104.943726104542/39.936905254878,-104.942598332814/39.937775846149,-104.942498445054/39.937775846174,-104.942852186818/39.937921543434,-104.943841176813/39.937714866989,-104.943857138936/39.937360216021,-104.944883928238/39.936669848975,-104.945957559601/39.936585110203,-104.945487775953/39.93646867453,-104.945221029502/39.93646682561,-104.944952938875/39.935785189766,-104.944728582396","route_note":"32 of 32 stops","addrs":[{"s":1,"a":"3177 E 134TH CIR","c":"THORNTON","z":"80241","lat":39.935764959783,"lon":-104.947182308231,"v":1,"w":0.0},{"s":2,"a":"13295 MONROE WAY","c":"THORNTON","z":"80241","lat":39.935593954254,"lon":-104.945477551372,"v":1,"w":2.2},{"s":3,"a":"13283 MONROE WAY","c":"THORNTON","z":"80241","lat":39.935367744091,"lon":-104.945161271315,"v":1,"w":0.7},{"s":4,"a":"13275 MONROE WAY","c":"THORNTON","z":"80241","lat":39.935251067935,"lon":-104.944996217287,"v":1,"w":0.4},{"s":5,"a":"13265 MONROE WAY","c":"THORNTON","z":"80241","lat":39.93510661269,"lon":-104.944785356888,"v":2,"w":0.4},{"s":6,"a":"13200 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.934640572795,"lon":-104.945427241578,"v":3,"w":1.4},{"s":7,"a":"13221 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.934604633404,"lon":-104.94559327302,"v":1,"w":0.2},{"s":8,"a":"13170 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.934242502567,"lon":-104.944874122561,"v":1,"w":1.3},{"s":9,"a":"13151 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.933942556314,"lon":-104.944682117003,"v":2,"w":0.7},{"s":10,"a":"13162 MONROE CT","c":"THORNTON","z":"80241","lat":39.933188022227,"lon":-104.945305956191,"v":1,"w":1.8},{"s":11,"a":"13131 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.933634232409,"lon":-104.944545053506,"v":1,"w":1.5},{"s":12,"a":"13141 GARFIELD DR","c":"THORNTON","z":"80241","lat":39.93379385051,"lon":-104.944610160863,"v":1,"w":0.3},{"s":13,"a":"13099 HARRISON DR","c":"THORNTON","z":"80241","lat":39.933793252222,"lon":-104.941906922362,"v":2,"w":3.0},{"s":14,"a":"3868 E 133RD CIR","c":"THORNTON","z":"80241","lat":39.936086254932,"lon":-104.941766307517,"v":2,"w":3.5},{"s":15,"a":"3788 E 133RD CIR","c":"THORNTON","z":"80241","lat":39.936086254962,"lon":-104.942187663449,"v":1,"w":0.5},{"s":16,"a":"3779 E 133RD CIR","c":"THORNTON","z":"80241","lat":39.936200846347,"lon":-104.942240332927,"v":1,"w":0.2},{"s":17,"a":"3739 E 133RD CIR","c":"THORNTON","z":"80241","lat":39.936200846362,"lon":-104.942451010892,"v":2,"w":0.2},{"s":18,"a":"13210 GARFIELD PL","c":"THORNTON","z":"80241","lat":39.934892658865,"lon":-104.943178255489,"v":2,"w":2.7},{"s":19,"a":"13219 GARFIELD PL","c":"THORNTON","z":"80241","lat":39.934880615538,"lon":-104.94332985883,"v":1,"w":0.2},{"s":20,"a":"13237 MONROE WAY","c":"THORNTON","z":"80241","lat":39.93471400649,"lon":-104.94393746373,"v":1,"w":0.9},{"s":21,"a":"3683 E 133RD CT","c":"THORNTON","z":"80241","lat":39.936837684068,"lon":-104.943726104542,"v":1,"w":3.3},{"s":22,"a":"3726 E 133RD CT","c":"THORNTON","z":"80241","lat":39.936905254878,"lon":-104.942598332814,"v":1,"w":1.4},{"s":23,"a":"3805 E 134TH CT","c":"THORNTON","z":"80241","lat":39.937775846149,"lon":-104.942498445054,"v":2,"w":1.4},{"s":24,"a":"3755 E 134TH CT","c":"THORNTON","z":"80241","lat":39.937775846174,"lon":-104.942852186818,"v":2,"w":0.4},{"s":25,"a":"13419 GARFIELD PKWY","c":"THORNTON","z":"80241","lat":39.937921543434,"lon":-104.943841176813,"v":3,"w":1.3},{"s":26,"a":"3685 E 134TH WAY","c":"THORNTON","z":"80241","lat":39.937714866989,"lon":-104.943857138936,"v":3,"w":0.3},{"s":27,"a":"13425 GARFIELD CT","c":"THORNTON","z":"80241","lat":39.937360216021,"lon":-104.944883928238,"v":1,"w":1.7},{"s":28,"a":"13375 MONROE WAY","c":"THORNTON","z":"80241","lat":39.936669848975,"lon":-104.945957559601,"v":1,"w":2.2},{"s":29,"a":"3613 E 133RD CT","c":"THORNTON","z":"80241","lat":39.936585110203,"lon":-104.945487775953,"v":1,"w":0.7},{"s":30,"a":"3622 E 133RD CT","c":"THORNTON","z":"80241","lat":39.93646867453,"lon":-104.945221029502,"v":2,"w":0.5},{"s":31,"a":"3632 E 133RD CT","c":"THORNTON","z":"80241","lat":39.93646682561,"lon":-104.944952938875,"v":1,"w":0.3},{"s":32,"a":"3630 E 133RD CIR","c":"THORNTON","z":"80241","lat":39.935785189766,"lon":-104.944728582396,"v":2,"w":1.3}]},"244":{"tid":244,"session":5,"city":"THORNTON","zip":"80602","n":38,"walk_min":34,"route_url":"https://www.google.com/maps/dir/39.94368594847,-104.953941463627/39.943347777157,-104.953280030516/39.943332063853,-104.955425352854/39.94344584629,-104.955623978655/39.943331254922,-104.955821339378/39.943331254936,-104.956018700089/39.943445846317,-104.956018700075/39.943445846359,-104.956610782206/39.944016404448,-104.956262274364/39.944019510835,-104.955658072367/39.944022431347,-104.955259418697/39.944822846073,-104.955218201064/39.944708254723,-104.955666945074/39.944744651688,-104.956139506409/39.944850188272,-104.95608127287/39.945945083356,-104.957464639437/39.945831803526,-104.957517585455/39.945717026202,-104.957577545839/39.944741846309,-104.958442992125/39.944343615549,-104.958524826343/39.944438631552,-104.958673684937/39.94497964916,-104.958672108333/39.945656893866,-104.958672831423/39.946115043317,-104.958525651798/39.946180500091,-104.958675449392/39.946684568366,-104.95867887836/39.947387845908,-104.957895946615/39.947387845835,-104.956848108599/39.947164746474,-104.955220954202/39.947139077639,-104.955073909683/39.946553066624,-104.955289918758/39.946492179958,-104.955468276769/39.945962149592,-104.955548663752/39.945990288194,-104.955694403432/39.945494718002,-104.955938601866/39.945392254577,-104.954923220482/39.944708254644,-104.954545085084/39.94482284601,-104.954320713073","route_note":"38 of 38 stops","addrs":[{"s":1,"a":"2722 E 136TH PL","c":"THORNTON","z":"80602","lat":39.94368594847,"lon":-104.953941463627,"v":3,"w":0.0},{"s":2,"a":"2782 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943347777157,"lon":-104.953280030516,"v":1,"w":1.2},{"s":3,"a":"2670 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943332063853,"lon":-104.955425352854,"v":1,"w":2.4},{"s":4,"a":"2661 E 136TH PL","c":"THORNTON","z":"80602","lat":39.94344584629,"lon":-104.955623978655,"v":1,"w":0.4},{"s":5,"a":"2650 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943331254922,"lon":-104.955821339378,"v":2,"w":0.4},{"s":6,"a":"2640 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943331254936,"lon":-104.956018700089,"v":1,"w":0.2},{"s":7,"a":"2641 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943445846317,"lon":-104.956018700075,"v":1,"w":0.2},{"s":8,"a":"2611 E 136TH PL","c":"THORNTON","z":"80602","lat":39.943445846359,"lon":-104.956610782206,"v":2,"w":0.7},{"s":9,"a":"2622 E 137TH AVE","c":"THORNTON","z":"80602","lat":39.944016404448,"lon":-104.956262274364,"v":1,"w":1.2},{"s":10,"a":"2652 E 137TH AVE","c":"THORNTON","z":"80602","lat":39.944019510835,"lon":-104.955658072367,"v":1,"w":0.7},{"s":11,"a":"2672 E 137TH AVE","c":"THORNTON","z":"80602","lat":39.944022431347,"lon":-104.955259418697,"v":2,"w":0.5},{"s":12,"a":"2645 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944822846073,"lon":-104.955218201064,"v":1,"w":1.2},{"s":13,"a":"2624 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944708254723,"lon":-104.955666945074,"v":1,"w":0.7},{"s":14,"a":"2604 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944744651688,"lon":-104.956139506409,"v":2,"w":0.6},{"s":15,"a":"2605 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944850188272,"lon":-104.95608127287,"v":1,"w":0.2},{"s":16,"a":"13784 COLUMBINE ST","c":"THORNTON","z":"80602","lat":39.945945083356,"lon":-104.957464639437,"v":1,"w":3.2},{"s":17,"a":"13774 COLUMBINE ST","c":"THORNTON","z":"80602","lat":39.945831803526,"lon":-104.957517585455,"v":1,"w":0.2},{"s":18,"a":"13764 COLUMBINE ST","c":"THORNTON","z":"80602","lat":39.945717026202,"lon":-104.957577545839,"v":4,"w":0.2},{"s":19,"a":"2415 E 137TH AVE","c":"THORNTON","z":"80602","lat":39.944741846309,"lon":-104.958442992125,"v":2,"w":2.4},{"s":20,"a":"13662 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.944343615549,"lon":-104.958524826343,"v":1,"w":0.7},{"s":21,"a":"13675 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.944438631552,"lon":-104.958673684937,"v":2,"w":0.3},{"s":22,"a":"13715 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.94497964916,"lon":-104.958672108333,"v":2,"w":0.8},{"s":23,"a":"13751 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.945656893866,"lon":-104.958672831423,"v":1,"w":1.0},{"s":24,"a":"13768 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.946115043317,"lon":-104.958525651798,"v":1,"w":0.8},{"s":25,"a":"13787 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.946180500091,"lon":-104.958675449392,"v":2,"w":0.3},{"s":26,"a":"13829 JOSEPHINE CT","c":"THORNTON","z":"80602","lat":39.946684568366,"lon":-104.95867887836,"v":1,"w":0.7},{"s":27,"a":"2439 E 139TH PL","c":"THORNTON","z":"80602","lat":39.947387845908,"lon":-104.957895946615,"v":1,"w":1.9},{"s":28,"a":"2533 E 139TH PL","c":"THORNTON","z":"80602","lat":39.947387845835,"lon":-104.956848108599,"v":2,"w":1.2},{"s":29,"a":"13841 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.947164746474,"lon":-104.955220954202,"v":1,"w":2.2},{"s":30,"a":"2701 E 138TH PL","c":"THORNTON","z":"80602","lat":39.947139077639,"lon":-104.955073909683,"v":1,"w":0.2},{"s":31,"a":"13838 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.946553066624,"lon":-104.955289918758,"v":1,"w":1.1},{"s":32,"a":"13825 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.946492179958,"lon":-104.955468276769,"v":3,"w":0.3},{"s":33,"a":"13808 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.945962149592,"lon":-104.955548663752,"v":1,"w":0.9},{"s":34,"a":"13813 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.945990288194,"lon":-104.955694403432,"v":2,"w":0.2},{"s":35,"a":"13801 ELIZABETH ST","c":"THORNTON","z":"80602","lat":39.945494718002,"lon":-104.955938601866,"v":1,"w":1.0},{"s":36,"a":"2636 E 138TH AVE","c":"THORNTON","z":"80602","lat":39.945392254577,"lon":-104.954923220482,"v":1,"w":1.3},{"s":37,"a":"2674 E 137TH PL","c":"THORNTON","z":"80602","lat":39.944708254644,"lon":-104.954545085084,"v":1,"w":1.4},{"s":38,"a":"2685 E 137TH PL","c":"THORNTON","z":"80602","lat":39.94482284601,"lon":-104.954320713073,"v":1,"w":0.4}]},"245":{"tid":245,"session":5,"city":"THORNTON","zip":"80241","n":38,"walk_min":29,"route_url":"https://www.google.com/maps/dir/39.934832279285,-104.953805165972/39.934787031779,-104.953534821361/39.934604571252,-104.953486709523/39.933851061993,-104.953902456891/39.933845154355,-104.954945175152/39.93352543356,-104.954889972273/39.933398077826,-104.954770108087/39.933198905094,-104.954516968574/39.932535081304,-104.954505689297/39.932310084119,-104.954143051374/39.932508360469,-104.953138633616/39.932703444197,-104.953140546179/39.932798299529,-104.953136414397/39.932942076563,-104.952867115991/39.933525219564,-104.952932076773/39.933510733138,-104.95279972362/39.933630423614,-104.952835699385/39.933599847413,-104.952390098963/39.931357478341,-104.952417123507/39.930830256454,-104.953223657401/39.930986635502,-104.953353493425/39.931494890869,-104.953285313888/39.931393750858,-104.95463124681/39.931386738549,-104.954638621825/39.931441144223,-104.954773382715/39.931382252904,-104.955888004433/39.931437065431,-104.95602011131/39.931971407035,-104.955855368064/39.931892253746,-104.955754312197/39.931945193538,-104.955605955893/39.931939394124,-104.955525439349/39.932867787648,-104.955341809777/39.932921054412,-104.9552021871/39.933174422015,-104.955651077234/39.933454106368,-104.955689348432/39.934418179333,-104.956461738603/39.934328576344,-104.955418051307/39.934436644975,-104.955320421768","route_note":"38 of 38 stops","addrs":[{"s":1,"a":"13281 ELIZABETH ST","c":"THORNTON","z":"80241","lat":39.934832279285,"lon":-104.953805165972,"v":1,"w":0.0},{"s":2,"a":"13278 ELIZABETH ST","c":"THORNTON","z":"80241","lat":39.934787031779,"lon":-104.953534821361,"v":3,"w":0.4},{"s":3,"a":"13267 ELIZABETH ST","c":"THORNTON","z":"80241","lat":39.934604571252,"lon":-104.953486709523,"v":2,"w":0.3},{"s":4,"a":"2749 E 132ND PL","c":"THORNTON","z":"80241","lat":39.933851061993,"lon":-104.953902456891,"v":2,"w":1.6},{"s":5,"a":"2627 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.933845154355,"lon":-104.954945175152,"v":2,"w":1.2},{"s":6,"a":"2644 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.93352543356,"lon":-104.954889972273,"v":2,"w":0.5},{"s":7,"a":"2650 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.933398077826,"lon":-104.954770108087,"v":1,"w":0.3},{"s":8,"a":"2660 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.933198905094,"lon":-104.954516968574,"v":1,"w":0.6},{"s":9,"a":"2617 E 131ST PL","c":"THORNTON","z":"80241","lat":39.932535081304,"lon":-104.954505689297,"v":1,"w":1.0},{"s":10,"a":"2644 E 131ST PL","c":"THORNTON","z":"80241","lat":39.932310084119,"lon":-104.954143051374,"v":1,"w":0.7},{"s":11,"a":"13176 CLAYTON WAY","c":"THORNTON","z":"80241","lat":39.932508360469,"lon":-104.953138633616,"v":2,"w":1.4},{"s":12,"a":"13188 CLAYTON WAY","c":"THORNTON","z":"80241","lat":39.932703444197,"lon":-104.953140546179,"v":1,"w":0.3},{"s":13,"a":"13194 CLAYTON WAY","c":"THORNTON","z":"80241","lat":39.932798299529,"lon":-104.953136414397,"v":2,"w":0.1},{"s":14,"a":"2687 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.932942076563,"lon":-104.952867115991,"v":1,"w":0.5},{"s":15,"a":"2782 E 132ND PL","c":"THORNTON","z":"80241","lat":39.933525219564,"lon":-104.952932076773,"v":1,"w":0.9},{"s":16,"a":"2786 E 132ND PL","c":"THORNTON","z":"80241","lat":39.933510733138,"lon":-104.95279972362,"v":1,"w":0.2},{"s":17,"a":"2785 E 132ND PL","c":"THORNTON","z":"80241","lat":39.933630423614,"lon":-104.952835699385,"v":2,"w":0.2},{"s":18,"a":"2799 E 132ND PL","c":"THORNTON","z":"80241","lat":39.933599847413,"lon":-104.952390098963,"v":2,"w":0.5},{"s":19,"a":"13119 ELIZABETH ST","c":"THORNTON","z":"80241","lat":39.931357478341,"lon":-104.952417123507,"v":2,"w":3.3},{"s":20,"a":"2716 E 131ST AVE","c":"THORNTON","z":"80241","lat":39.930830256454,"lon":-104.953223657401,"v":2,"w":1.7},{"s":21,"a":"13102 CLAYTON WAY","c":"THORNTON","z":"80241","lat":39.930986635502,"lon":-104.953353493425,"v":1,"w":0.4},{"s":22,"a":"13128 CLAYTON WAY","c":"THORNTON","z":"80241","lat":39.931494890869,"lon":-104.953285313888,"v":2,"w":0.8},{"s":23,"a":"13122 CLAYTON CT","c":"THORNTON","z":"80241","lat":39.931393750858,"lon":-104.95463124681,"v":2,"w":1.7},{"s":24,"a":"13118 CLAYTON CT","c":"THORNTON","z":"80241","lat":39.931386738549,"lon":-104.954638621825,"v":1,"w":0.0},{"s":25,"a":"13109 CLAYTON CT","c":"THORNTON","z":"80241","lat":39.931441144223,"lon":-104.954773382715,"v":2,"w":0.2},{"s":26,"a":"13016 COLUMBINE WAY","c":"THORNTON","z":"80241","lat":39.931382252904,"lon":-104.955888004433,"v":1,"w":1.3},{"s":27,"a":"13019 COLUMBINE WAY","c":"THORNTON","z":"80241","lat":39.931437065431,"lon":-104.95602011131,"v":1,"w":0.2},{"s":28,"a":"2590 E 131ST AVE","c":"THORNTON","z":"80241","lat":39.931971407035,"lon":-104.955855368064,"v":1,"w":1.0},{"s":29,"a":"2594 E 131ST AVE","c":"THORNTON","z":"80241","lat":39.931892253746,"lon":-104.955754312197,"v":1,"w":0.2},{"s":30,"a":"2597 E 131ST AVE","c":"THORNTON","z":"80241","lat":39.931945193538,"lon":-104.955605955893,"v":1,"w":0.2},{"s":31,"a":"13105 COLUMBINE WAY","c":"THORNTON","z":"80241","lat":39.931939394124,"lon":-104.955525439349,"v":1,"w":0.1},{"s":32,"a":"2572 E 131ST PL","c":"THORNTON","z":"80241","lat":39.932867787648,"lon":-104.955341809777,"v":2,"w":1.6},{"s":33,"a":"2581 E 131ST PL","c":"THORNTON","z":"80241","lat":39.932921054412,"lon":-104.9552021871,"v":1,"w":0.2},{"s":34,"a":"2548 E 131ST PL","c":"THORNTON","z":"80241","lat":39.933174422015,"lon":-104.955651077234,"v":1,"w":0.9},{"s":35,"a":"2549 E 131ST PL","c":"THORNTON","z":"80241","lat":39.933454106368,"lon":-104.955689348432,"v":1,"w":0.5},{"s":36,"a":"13203 COLUMBINE CIR","c":"THORNTON","z":"80241","lat":39.934418179333,"lon":-104.956461738603,"v":1,"w":2.3},{"s":37,"a":"2610 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.934328576344,"lon":-104.955418051307,"v":1,"w":1.3},{"s":38,"a":"2607 E 132ND AVE","c":"THORNTON","z":"80241","lat":39.934436644975,"lon":-104.955320421768,"v":1,"w":0.3}]}};
+var SESSIONS = [{"session":1,"total_doors":72,"total_voters":111,"turfs":[{"tid":63,"doors":53,"city":"THORNTON","zip":"80602","drive":2,"center_lat":39.944311,"center_lon":-104.946323},{"tid":410,"doors":19,"city":"THORNTON","zip":"80602","drive":5,"center_lat":39.959368,"center_lon":-104.928967}]},{"session":2,"total_doors":77,"total_voters":113,"turfs":[{"tid":130,"doors":46,"city":"THORNTON","zip":"80602","drive":1,"center_lat":39.949063,"center_lon":-104.948949},{"tid":339,"doors":31,"city":"THORNTON","zip":"80602","drive":2,"center_lat":39.955459,"center_lon":-104.949063}]},{"session":3,"total_doors":69,"total_voters":92,"turfs":[{"tid":27,"doors":59,"city":"THORNTON","zip":"80241","drive":5,"center_lat":39.931122,"center_lon":-104.942447},{"tid":470,"doors":10,"city":"THORNTON","zip":"80241","drive":4,"center_lat":39.924753,"center_lon":-104.923841}]},{"session":4,"total_doors":77,"total_voters":115,"turfs":[{"tid":145,"doors":45,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.946342,"center_lon":-104.952257},{"tid":327,"doors":32,"city":"THORNTON","zip":"80241","drive":3,"center_lat":39.935695,"center_lon":-104.944195}]},{"session":5,"total_doors":76,"total_voters":109,"turfs":[{"tid":244,"doors":38,"city":"THORNTON","zip":"80602","drive":1,"center_lat":39.945097,"center_lon":-104.956348},{"tid":245,"doors":38,"city":"THORNTON","zip":"80241","drive":3,"center_lat":39.93282,"center_lon":-104.954363}]}];
+
+var currentTurf = null;
+var doorStatus = {};
+var doorNotes = {};
+var sessionStartTime = null;
+var timerInterval = null;
+var volunteerName = '';
+var volunteerCode = '';
+var assignments = {}; // {turf_key: volunteer_name} — loaded from sheet
+var myTurfs = []; // turf IDs assigned to this volunteer
+var DISP_COLORS = {'Contacted':'#28a745','Volunteer':'#17a2b8','Lit Drop':'#6f42c1','Refused':'#dc3545','Moved':'#6c757d'};
+
+// ===== VOLUNTEER NAME =====
+function setVolunteerName() {
+  var name = document.getElementById('nameInput').value.trim();
+  if (!name) return;
+  volunteerName = name;
+  try { localStorage.setItem('canvass_volunteer', name); } catch(e) {}
+  showNameDisplay();
+  loadAssignments();
+}
+
+function lookupByCode() {
+  var code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if (!code) return;
+  volunteerCode = code;
+  // Load assignments and find who has this code
+  loadAssignmentsForCode(code);
+}
+
+function changeName() {
+  document.getElementById('nameEntry').style.display = 'block';
+  document.getElementById('nameDisplay').style.display = 'none';
+  document.getElementById('nameInput').value = volunteerName;
+  document.getElementById('nameInput').focus();
+  myTurfs = [];
+}
+
+function showNameDisplay() {
+  document.getElementById('nameEntry').style.display = 'none';
+  document.getElementById('nameDisplay').style.display = 'block';
+  document.getElementById('greetingText').textContent = 'Welcome, ' + volunteerName;
+}
+
+function loadVolunteerName() {
+  try {
+    var saved = localStorage.getItem('canvass_volunteer');
+    if (saved) {
+      volunteerName = saved;
+      document.getElementById('nameInput').value = saved;
+      showNameDisplay();
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// ===== ASSIGNMENTS (from manager) =====
+function turfClaimKey(tid) {
+  var t = TURFS[String(tid)];
+  return 's' + t.session + '_t' + tid;
+}
+
+function loadAssignments() {
+  var cb = 'assignCB_' + Math.random().toString(36).slice(2);
+  window[cb] = function(data) {
+    if (data.status === 'ok' && data.assigned) {
+      assignments = data.assigned;
+      findMyTurfs();
+      buildDashboard();
+    }
+    delete window[cb];
+  };
+  var s = document.createElement('script');
+  s.src = SCRIPT_URL + '?action=list&callback=' + cb;
+  document.body.appendChild(s);
+}
+
+function loadAssignmentsForCode(code) {
+  var cb = 'codeCB_' + Math.random().toString(36).slice(2);
+  window[cb] = function(data) {
+    if (data.status === 'ok' && data.assigned) {
+      assignments = data.assigned;
+      // Search assignments for a volunteer whose code matches
+      // Code format: first 2 chars of name uppercased — match loosely
+      var found = null;
+      for (var k in assignments) {
+        var vname = assignments[k];
+        if (vname && vname.substring(0,2).toUpperCase() === code.substring(0,2).toUpperCase()) {
+          found = vname;
+          break;
+        }
+      }
+      if (found) {
+        volunteerName = found;
+        try { localStorage.setItem('canvass_volunteer', found); } catch(e) {}
+        showNameDisplay();
+        findMyTurfs();
+        buildDashboard();
+      } else {
+        document.getElementById('assignmentStatus').innerHTML =
+          '<div class="no-assignment">No volunteer found with code "' + code + '". Try entering your name instead.</div>';
+      }
+    }
+    delete window[cb];
+  };
+  var s = document.createElement('script');
+  s.src = SCRIPT_URL + '?action=list&callback=' + cb;
+  document.body.appendChild(s);
+}
+
+function findMyTurfs() {
+  myTurfs = [];
+  if (!volunteerName) return;
+  var nameLower = volunteerName.toLowerCase();
+  for (var key in assignments) {
+    if (assignments[key].toLowerCase() === nameLower) {
+      // Parse turf ID from key like "s1_t63"
+      var m = key.match(/t(\d+)$/);
+      if (m) myTurfs.push(parseInt(m[1]));
+    }
+  }
+}
+
+// ===== DASHBOARD =====
+function buildDashboard() {
+  var html = '';
+  var statusHtml = '';
+
+  if (!volunteerName) {
+    document.getElementById('sessionCards').innerHTML = '';
+    document.getElementById('assignmentStatus').innerHTML = '';
+    return;
+  }
+
+  if (myTurfs.length === 0) {
+    statusHtml = '<div class="no-assignment">No turfs assigned to you yet. Check with your manager or try a different name.</div>';
+    document.getElementById('assignmentStatus').innerHTML = statusHtml;
+  } else {
+    statusHtml = '<div class="total-banner"><div class="big">' + myTurfs.length + ' turf' + (myTurfs.length>1?'s':'') + ' assigned to you</div>';
+    var totalDoors = 0;
+    myTurfs.forEach(function(tid) { if (TURFS[String(tid)]) totalDoors += TURFS[String(tid)].n; });
+    statusHtml += '<div>' + totalDoors + ' doors total</div></div>';
+    document.getElementById('assignmentStatus').innerHTML = statusHtml;
+  }
+
+  // Show sessions, highlighting assigned turfs
+  SESSIONS.forEach(function(s) {
+    var hasAssigned = false;
+    s.turfs.forEach(function(t) { if (myTurfs.indexOf(t.tid) >= 0) hasAssigned = true; });
+    if (!hasAssigned) return; // Only show sessions that have turfs assigned to this volunteer
+
+    html += '<div class="session-card"><div class="session-hdr">Session ' + s.session + '</div>';
+    html += '<div class="session-stats">' + s.total_doors + ' doors &middot; ' + s.total_voters + ' voters</div>';
+    s.turfs.forEach(function(t, i) {
+      var isAssigned = myTurfs.indexOf(t.tid) >= 0;
+      var label = t.city + ' ' + t.zip + ' — Turf ' + t.tid;
+      var cssClass = 'turf-link' + (isAssigned ? ' assigned' : ' not-assigned');
+      html += '<div class="' + cssClass + '"' + (isAssigned ? ' onclick="loadTurf(' + t.tid + ')"' : '') + '>';
+      html += '<span class="turf-label">' + label + '</span>';
+      html += '<span class="turf-detail">' + t.doors + ' doors &middot; ' + t.drive + ' min drive</span>';
+      if (isAssigned) html += '<span class="turf-assigned">Tap to start &rarr;</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  if (!html && myTurfs.length === 0) {
+    html = '';
+  }
+  document.getElementById('sessionCards').innerHTML = html;
+}
+
+function showDashboard() {
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('turfview').style.display = 'none';
+  window.scrollTo(0, 0);
+  // Update URL
+  history.pushState(null, '', window.location.pathname);
+}
+
+// ===== TURF VIEW =====
+function loadTurf(tid) {
+  tid = String(tid);
+  currentTurf = TURFS[tid];
+  if (!currentTurf) { alert('Turf not found: ' + tid); return; }
+  
+  var t = currentTurf;
+  doorStatus = {};
+  doorNotes = {};
+  sessionStartTime = null;
+  if (timerInterval) clearInterval(timerInterval);
+  
+  document.getElementById('tvTitle').textContent = 'Session ' + t.session + ' — ' + t.city + ' ' + t.zip;
+  document.getElementById('tvSubtitle').textContent = t.n + ' doors · Turf ' + t.tid + ' · ';
+  document.getElementById('timerSpan') && (document.getElementById('timerSpan').textContent = '');
+  document.getElementById('btnRoute').href = t.route_url;
+  document.getElementById('routeNote').textContent = t.route_note + ' on Google Maps';
+  document.getElementById('btnStart').style.display = 'block';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('resumeBanner').style.display = 'none';
+  
+  // Build door list
+  var html = '';
+  t.addrs.forEach(function(a) {
+    var navUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + a.lat + ',' + a.lon + '&travelmode=walking';
+    var wc, wb;
+    if (a.s === 1) {
+      wb = '<span class="walk-badge" style="background:#007bff">START</span>';
+    } else {
+      wc = a.w < 1.5 ? '#28a745' : (a.w < 3 ? '#ffc107' : '#dc3545');
+      wb = '<span class="walk-badge" style="background:' + wc + '">' + a.w + 'm</span>';
+    }
+    html += '<div class="door" id="door-' + a.s + '" data-step="' + a.s + '" data-addr="' + a.a + ', ' + a.c + ', CO ' + a.z + '" data-lat="' + a.lat + '" data-lon="' + a.lon + '">';
+    html += '<div class="door-header"><span class="step-num">' + a.s + '</span>';
+    html += '<span class="door-addr">' + a.a + '</span>' + wb + '</div>';
+    html += '<div class="door-meta">' + a.c + ' ' + a.z + ' &middot; ' + a.v + ' voter(s)</div>';
+    html += '<div class="door-actions">';
+    html += '<a href="' + navUrl + '" target="_blank" class="btn btn-nav">Navigate</a>';
+    html += '<button class="btn btn-contacted" onclick="markDoor(' + a.s + ',\'Contacted\')">Contacted</button>';
+    html += '<button class="btn btn-volunteer" onclick="markDoor(' + a.s + ',\'Volunteer\')">Volunteer</button>';
+    html += '<button class="btn btn-litdrop" onclick="markDoor(' + a.s + ',\'Lit Drop\')">Lit Drop</button>';
+    html += '<button class="btn btn-refused" onclick="markDoor(' + a.s + ',\'Refused\')">Refused</button>';
+    html += '<button class="btn btn-moved" onclick="markDoor(' + a.s + ',\'Moved\')">Moved</button>';
+    html += '</div>';
+    html += '<div class="door-notes"><div class="notes-row">';
+    html += '<input type="text" id="notes-' + a.s + '" placeholder="Notes..." class="notes-input" />';
+    html += '<button class="btn-save-note" onclick="saveNote(' + a.s + ')">Save Note</button>';
+    html += '</div><div class="note-saved" id="note-saved-' + a.s + '"></div></div>';
+    html += '<div class="door-status" id="status-' + a.s + '"></div></div>';
+  });
+  document.getElementById('doorList').innerHTML = html;
+  
+  // Build next-turf link
+  var sess = SESSIONS.find(function(s) { return s.session === t.session; });
+  var turfIdx = -1;
+  if (sess) {
+    for (var i = 0; i < sess.turfs.length; i++) {
+      if (sess.turfs[i].tid === t.tid) { turfIdx = i; break; }
+    }
+  }
+  var ntHtml = '';
+  if (sess && turfIdx >= 0 && turfIdx < sess.turfs.length - 1) {
+    var nt = sess.turfs[turfIdx + 1];
+    ntHtml = '<div class="next-turf"><h3>Next Cluster</h3>';
+    ntHtml += '<p>' + nt.city + ' ' + nt.zip + ' &middot; ' + nt.doors + ' doors</p>';
+    ntHtml += '<button class="btn-next" onclick="loadTurf(' + nt.tid + ')">Go to Next Cluster &rarr;</button>';
+    ntHtml += '<a href="https://www.google.com/maps/dir/?api=1&destination=' + nt.center_lat + ',' + nt.center_lon + '&travelmode=driving" target="_blank" class="btn-drive">Drive to Next Cluster</a></div>';
+  } else {
+    ntHtml = '<div class="next-turf"><h3>Session Complete!</h3><p>Great work! Head home.</p>';
+    ntHtml += '<a href="https://www.google.com/maps/dir/?api=1&destination=39.9463,-104.9540&travelmode=driving" target="_blank" class="btn-drive">Drive Home</a>';
+    ntHtml += '<button class="btn-next" style="background:#6c757d" onclick="showDashboard()">Back to Dashboard</button></div>';
+  }
+  document.getElementById('nextTurf').innerHTML = ntHtml;
+  
+  // Show turf view
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('turfview').style.display = 'block';
+  
+  // Restore state
+  restoreState();
+  if (Object.keys(doorStatus).length === 0) {
+    var d1 = document.getElementById('door-1');
+    if (d1) d1.classList.add('active');
+  }
+  
+  updateStats();
+  window.scrollTo(0, 0);
+  
+  // Update URL for bookmarking
+  history.pushState(null, '', window.location.pathname + '?turf=' + tid);
+}
+
+// ===== STATE MANAGEMENT =====
+function storageKey() { return 'canvass_s' + currentTurf.session + '_t' + currentTurf.tid; }
+
+function saveLocal() {
+  var state = { doorStatus: doorStatus, doorNotes: doorNotes, sessionStartTime: sessionStartTime, lastSaved: new Date().toISOString() };
+  try { localStorage.setItem(storageKey(), JSON.stringify(state)); } catch(e) {}
+}
+
+function restoreState() {
+  try {
+    var raw = localStorage.getItem(storageKey());
+    if (!raw) return;
+    var saved = JSON.parse(raw);
+    if (!saved.doorStatus || Object.keys(saved.doorStatus).length === 0) return;
+    doorStatus = saved.doorStatus;
+    doorNotes = saved.doorNotes || {};
+    if (saved.sessionStartTime) {
+      sessionStartTime = saved.sessionStartTime;
+      document.getElementById('btnStart').style.display = 'none';
+      document.getElementById('btnPause').style.display = 'block';
+      startTimer();
+    }
+    for (var step in doorStatus) {
+      var door = document.getElementById('door-' + step);
+      var statusEl = document.getElementById('status-' + step);
+      if (door) {
+        door.classList.add('done');
+        if (statusEl) statusEl.innerHTML = '<span style="color:' + (DISP_COLORS[doorStatus[step]]||'#333') + '">' + doorStatus[step] + '</span>';
+      }
+      if (doorNotes[step]) {
+        var ni = document.getElementById('notes-' + step);
+        var ns = document.getElementById('note-saved-' + step);
+        if (ni) ni.value = doorNotes[step];
+        if (ns) ns.textContent = 'Note saved';
+      }
+    }
+    highlightNext();
+    document.getElementById('resumeBanner').style.display = 'block';
+    document.getElementById('resumeCount').textContent = Object.keys(doorStatus).length;
+    var next = findNextStep();
+    if (next) {
+      var el = document.getElementById('door-' + next);
+      if (el) setTimeout(function() { el.scrollIntoView({behavior:'smooth', block:'center'}); }, 500);
+    }
+  } catch(e) {}
+}
+
+// ===== TIMER =====
+function startSession() {
+  sessionStartTime = new Date().toISOString();
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnPause').style.display = 'block';
+  startTimer(); saveLocal();
+  sendData({ action: 'timing', turf: storageKey(), event: 'start', volunteer: volunteerName });
+}
+
+function pauseSession() {
+  var knocked = Object.keys(doorStatus).length;
+  var contacts = Object.values(doorStatus).filter(function(v){return v==='Contacted'||v==='Volunteer';}).length;
+  var mins = getElapsedMinutes();
+  var dph = mins > 0 ? Math.round(knocked / (mins/60) * 10) / 10 : 0;
+  sendData({ action:'timing', turf:storageKey(), event:'pause', knocked:knocked, contacts:contacts, minutes:Math.round(mins), dph:dph, volunteer:volunteerName });
+  if (timerInterval) clearInterval(timerInterval);
+  document.getElementById('btnPause').textContent = 'Resume';
+  document.getElementById('btnPause').style.background = '#28a745';
+  document.getElementById('btnPause').style.color = '#fff';
+  document.getElementById('btnPause').onclick = resumeSession;
+  saveLocal();
+}
+
+function resumeSession() {
+  document.getElementById('btnPause').textContent = 'Pause';
+  document.getElementById('btnPause').style.background = '#ffc107';
+  document.getElementById('btnPause').style.color = '#333';
+  document.getElementById('btnPause').onclick = pauseSession;
+  startTimer();
+  sendData({ action:'timing', turf:storageKey(), event:'resume', volunteer:volunteerName });
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function getElapsedMinutes() {
+  if (!sessionStartTime) return 0;
+  return (new Date() - new Date(sessionStartTime)) / 60000;
+}
+
+function updateTimer() {
+  var mins = getElapsedMinutes();
+  var h = Math.floor(mins / 60), m = Math.floor(mins % 60), s = Math.floor((mins * 60) % 60);
+  var el = document.getElementById('tvSubtitle');
+  var base = currentTurf.n + ' doors · Turf ' + currentTurf.tid + ' · ';
+  el.textContent = base + (h > 0 ? h + 'h ' : '') + m + 'm ' + s + 's';
+}
+
+// ===== DOOR ACTIONS =====
+function findNextStep() {
+  for (var i = 1; i <= currentTurf.n; i++) { if (!doorStatus[i]) return i; }
+  return null;
+}
+
+function highlightNext() {
+  document.querySelectorAll('.door.active').forEach(function(el) { el.classList.remove('active'); });
+  var next = findNextStep();
+  if (next) { var el = document.getElementById('door-' + next); if (el) el.classList.add('active'); }
+}
+
+function updateStats() {
+  var knocked = Object.keys(doorStatus).length;
+  var contacts = Object.values(doorStatus).filter(function(v){return v==='Contacted'||v==='Volunteer';}).length;
+  document.getElementById('statDoors').textContent = knocked;
+  document.getElementById('statContacts').textContent = contacts;
+  document.getElementById('statLeft').textContent = currentTurf.n - knocked;
+  document.getElementById('progressBar').style.width = (knocked / currentTurf.n * 100) + '%';
+  var mins = getElapsedMinutes();
+  if (mins > 1 && knocked > 0) document.getElementById('statDPH').textContent = Math.round(knocked / (mins/60) * 10) / 10;
+}
+
+function saveNote(step) {
+  var noteVal = document.getElementById('notes-' + step).value;
+  if (!noteVal) return;
+  doorNotes[step] = noteVal;
+  saveLocal();
+  var door = document.getElementById('door-' + step);
+  document.getElementById('note-saved-' + step).textContent = 'Note saved ✓';
+  sendData({ action:'submit', turf_id:storageKey(), stop_num:step, address:door.getAttribute('data-addr'), disposition:'Note', notes:noteVal, volunteer:volunteerName });
+}
+
+function markDoor(step, disposition) {
+  var door = document.getElementById('door-' + step);
+  var statusEl = document.getElementById('status-' + step);
+  var addr = door.getAttribute('data-addr');
+  var notes = document.getElementById('notes-' + step).value || '';
+  doorStatus[step] = disposition;
+  if (notes) doorNotes[step] = notes;
+  door.classList.add('done');
+  statusEl.innerHTML = '<span style="color:' + (DISP_COLORS[disposition]||'#333') + '">' + disposition + '</span>';
+  updateStats(); highlightNext(); saveLocal();
+  var next = findNextStep();
+  if (next) {
+    var nextEl = document.getElementById('door-' + next);
+    if (nextEl) setTimeout(function() { nextEl.scrollIntoView({behavior:'smooth', block:'center'}); }, 300);
+  }
+  sendData({ action:'submit', turf_id:storageKey(), stop_num:step, address:addr, disposition:disposition, notes:notes, lat:door.getAttribute('data-lat'), lng:door.getAttribute('data-lon'), volunteer:volunteerName });
+}
+
+function sendData(payload) {
+  var ifr = document.createElement("iframe");
+  ifr.name = "sf_" + Math.random().toString(36).slice(2);
+  ifr.style.display = "none";
+  document.body.appendChild(ifr);
+  var form = document.createElement("form");
+  form.method = "GET"; form.action = SCRIPT_URL; form.target = ifr.name;
+  for (var k in payload) {
+    var inp = document.createElement("input");
+    inp.type = "hidden"; inp.name = k; inp.value = payload[k];
+    form.appendChild(inp);
+  }
+  document.body.appendChild(form); form.submit();
+  setTimeout(function(){ try{ifr.remove();form.remove();}catch(e){} }, 15000);
+}
+
+// ===== INIT =====
+var params = new URLSearchParams(window.location.search);
+var urlVolunteer = params.get('volunteer');
+var urlTurf = params.get('turf');
+
+// If link includes volunteer name, use it
+if (urlVolunteer) {
+  volunteerName = urlVolunteer;
+  try { localStorage.setItem('canvass_volunteer', urlVolunteer); } catch(e) {}
+  document.getElementById('nameInput').value = urlVolunteer;
+  showNameDisplay();
+}
+
+// Load saved name or use URL param
+if (!volunteerName) loadVolunteerName();
+
+// Load assignments from sheet, then show dashboard or direct turf
+if (volunteerName) {
+  var initCb = 'initCB_' + Math.random().toString(36).slice(2);
+  window[initCb] = function(data) {
+    if (data.status === 'ok' && data.assigned) {
+      assignments = data.assigned;
+      findMyTurfs();
+      buildDashboard();
+      // If URL has a specific turf, load it directly
+      if (urlTurf && TURFS[urlTurf]) {
+        loadTurf(urlTurf);
+      }
+    }
+    delete window[initCb];
+  };
+  var initScript = document.createElement('script');
+  initScript.src = SCRIPT_URL + '?action=list&callback=' + initCb;
+  document.body.appendChild(initScript);
+} else {
+  buildDashboard();
+}
+
+// Handle back button
+window.addEventListener('popstate', function() {
+  var p = new URLSearchParams(window.location.search);
+  var t = p.get('turf');
+  if (t && TURFS[t]) loadTurf(t);
+  else showDashboard();
+});
+</script>
+</body>
+</html>
