@@ -130,7 +130,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 <!-- ===== DASHBOARD ===== -->
 <div id="dashboard">
   <h1>CD-8 Canvass</h1>
-  <p class="subtitle">Enter your name or code to see your assigned turfs</p>
+  <p class="subtitle">Enter your name or 3-character code to see your assigned turfs</p>
   <div class="name-entry" id="nameEntry">
     <label>Your Name</label>
     <div class="name-row">
@@ -138,8 +138,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       <button class="btn-set-name" onclick="setVolunteerName()">Go</button>
     </div>
     <div class="code-entry" style="margin-top:12px; border:none; padding:0;">
-      <label>Or enter your 2-digit code</label>
-      <input type="text" id="codeInput" class="code-input" placeholder="A3" maxlength="3"
+      <label>Or enter your 3-character code</label>
+      <input type="text" id="codeInput" class="code-input" placeholder="EV3" maxlength="3"
              onkeyup="if(event.key==='Enter')lookupByCode()" />
     </div>
   </div>
