@@ -77,6 +77,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .door.done .door-actions, .door.done .door-notes { display: none; }
 .door.active { border-left-color: #007bff; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
 .door-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.btn-nav-sm { background: #007bff; color: white; padding: 3px 8px; border-radius: 5px; font-size: 11px;
+              text-decoration: none; font-weight: 600; white-space: nowrap; margin-left: auto; }
+.btn-done { background: #1B4332; color: white; padding: 7px 14px; border: none; border-radius: 6px;
+            font-size: 14px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 6px; }
 .step-num { background: #1B4332; color: white; width: 28px; height: 28px; border-radius: 50%;
              display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; flex-shrink: 0; }
 .door.done .step-num { background: #28a745; }
@@ -195,7 +199,7 @@ var volunteerName = '';
 var volunteerCode = '';
 var assignments = {}; // {turf_key: volunteer_name} — loaded from sheet
 var myTurfs = []; // turf IDs assigned to this volunteer
-var DISP_COLORS = {'Contacted':'#28a745','Volunteer':'#17a2b8','Lit Drop':'#6f42c1','Refused':'#dc3545','Moved':'#6c757d'};
+var DISP_COLORS = {'Contacted':'#28a745','Volunteer':'#17a2b8','Lit Drop':'#6f42c1','Refused':'#dc3545','Moved':'#6c757d','Done':'#1B4332'};
 
 // ===== VOLUNTEER NAME =====
 function setVolunteerName() {
@@ -402,20 +406,21 @@ function loadTurf(tid) {
     }
     html += '<div class="door" id="door-' + a.s + '" data-step="' + a.s + '" data-addr="' + a.a + ', ' + a.c + ', CO ' + a.z + '" data-lat="' + a.lat + '" data-lon="' + a.lon + '">';
     html += '<div class="door-header"><span class="step-num">' + a.s + '</span>';
-    html += '<span class="door-addr">' + a.a + '</span>' + wb + '</div>';
+    html += '<span class="door-addr">' + a.a + '</span>' + wb;
+    html += '<a href="' + navUrl + '" target="_blank" class="btn-nav-sm">Navigate</a></div>';
     html += '<div class="door-meta">' + a.c + ' ' + a.z + ' &middot; ' + a.v + ' voter(s)</div>';
+    html += '<div class="door-notes"><div class="notes-row">';
+    html += '<input type="text" id="notes-' + a.s + '" placeholder="Notes..." class="notes-input" />';
+    html += '<button class="btn-save-note" onclick="saveNote(' + a.s + ')">Save Note</button>';
+    html += '</div><div class="note-saved" id="note-saved-' + a.s + '"></div></div>';
     html += '<div class="door-actions">';
-    html += '<a href="' + navUrl + '" target="_blank" class="btn btn-nav">Navigate</a>';
     html += '<button class="btn btn-contacted" onclick="markDoor(' + a.s + ',\'Contacted\')">Contacted</button>';
     html += '<button class="btn btn-volunteer" onclick="markDoor(' + a.s + ',\'Volunteer\')">Volunteer</button>';
     html += '<button class="btn btn-litdrop" onclick="markDoor(' + a.s + ',\'Lit Drop\')">Lit Drop</button>';
     html += '<button class="btn btn-refused" onclick="markDoor(' + a.s + ',\'Refused\')">Refused</button>';
     html += '<button class="btn btn-moved" onclick="markDoor(' + a.s + ',\'Moved\')">Moved</button>';
     html += '</div>';
-    html += '<div class="door-notes"><div class="notes-row">';
-    html += '<input type="text" id="notes-' + a.s + '" placeholder="Notes..." class="notes-input" />';
-    html += '<button class="btn-save-note" onclick="saveNote(' + a.s + ')">Save Note</button>';
-    html += '</div><div class="note-saved" id="note-saved-' + a.s + '"></div></div>';
+    html += '<button class="btn-done" onclick="markDoor(' + a.s + ',\'Done\')">&#x2714; Done!</button>';
     html += '<div class="door-status" id="status-' + a.s + '"></div></div>';
   });
   document.getElementById('doorList').innerHTML = html;
