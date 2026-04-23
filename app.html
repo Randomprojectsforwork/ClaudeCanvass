@@ -664,12 +664,14 @@ function undoDoor(step) {
   var door = document.getElementById('door-' + step);
   var statusEl = document.getElementById('status-' + step);
   var badge = document.getElementById('badge-' + step);
+  var addr = door.getAttribute('data-addr');
   door.classList.remove('done', 'skipped');
   statusEl.innerHTML = '';
   badge.textContent = '';
   badge.style.background = '';
   delete doorStatus[step];
   highlightNext(); updateStats(); updateMissingBtn(); saveLocal();
+  sendData({ action:'submit', turf_id:storageKey(), stop_num:step, address:addr, disposition:'Undo', notes:'', lat:door.getAttribute('data-lat'), lng:door.getAttribute('data-lon'), volunteer:volunteerName });
 }
 
 function getMissingSteps() {
