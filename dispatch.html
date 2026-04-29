@@ -513,34 +513,27 @@
     var BASE_URL = 'https://randomprojectsforwork.github.io/ClaudeCanvass/';
 
     var SESSIONS = [
-      {"session":1,"total_doors":10,"total_voters":21,"turfs":[
-        {"tid":1,"doors":10,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.924753,"center_lon":-104.923841}
+      {"session":1,"total_doors":10,"total_voters":19,"turfs":[
+        {"tid": 1, "doors": 10, "city": "THORNTON", "zip": "80241", "drive": 0, "center_lat": 39.924753, "center_lon": -104.923841}
       ]},
-      {"session":2,"total_doors":57,"total_voters":74,"turfs":[
-        {"tid":2,"doors":26,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.929858,"center_lon":-104.942111},
-        {"tid":3,"doors":31,"city":"THORNTON","zip":"80241","drive":2,"center_lat":39.932175,"center_lon":-104.942653}
+      {"session":2,"total_doors":34,"total_voters":50,"turfs":[
+        {"tid": 2, "doors": 34, "city": "THORNTON", "zip": "80241", "drive": 0, "center_lat": 39.935433, "center_lon": -104.944161}
       ]},
-      {"session":3,"total_doors":38,"total_voters":59,"turfs":[
-        {"tid":4,"doors":38,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.93282,"center_lon":-104.954363}
+      {"session":3,"total_doors":63,"total_voters":95,"turfs":[
+        {"tid": 3, "doors": 32, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.945121, "center_lon": -104.956441},
+        {"tid": 4, "doors": 31, "city": "THORNTON", "zip": "80602", "drive": 2, "center_lat": 39.945568, "center_lon": -104.952668}
       ]},
-      {"session":4,"total_doors":34,"total_voters":54,"turfs":[
-        {"tid":5,"doors":34,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.935433,"center_lon":-104.944161}
+      {"session":4,"total_doors":34,"total_voters":46,"turfs":[
+        {"tid": 5, "doors": 34, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.947518, "center_lon": -104.951233}
       ]},
-      {"session":5,"total_doors":63,"total_voters":97,"turfs":[
-        {"tid":6,"doors":32,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.945121,"center_lon":-104.956441},
-        {"tid":7,"doors":31,"city":"THORNTON","zip":"80602","drive":2,"center_lat":39.945568,"center_lon":-104.952668}
+      {"session":5,"total_doors":35,"total_voters":51,"turfs":[
+        {"tid": 6, "doors": 35, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.949719, "center_lon": -104.948786}
       ]},
-      {"session":6,"total_doors":34,"total_voters":50,"turfs":[
-        {"tid":8,"doors":34,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.947518,"center_lon":-104.951233}
+      {"session":6,"total_doors":24,"total_voters":37,"turfs":[
+        {"tid": 7, "doors": 24, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.955454, "center_lon": -104.949291}
       ]},
-      {"session":7,"total_doors":35,"total_voters":52,"turfs":[
-        {"tid":9,"doors":35,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.949719,"center_lon":-104.948786}
-      ]},
-      {"session":8,"total_doors":24,"total_voters":37,"turfs":[
-        {"tid":10,"doors":24,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.955454,"center_lon":-104.949291}
-      ]},
-      {"session":9,"total_doors":19,"total_voters":36,"turfs":[
-        {"tid":11,"doors":19,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.959368,"center_lon":-104.928967}
+      {"session":7,"total_doors":19,"total_voters":36,"turfs":[
+        {"tid": 8, "doors": 19, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.959368, "center_lon": -104.928967}
       ]}
     ];
 
@@ -704,10 +697,14 @@
 
         // Session info
         var turfList = turfs.map(function(t) {
-          return 'Turf ' + t.tid + ' (' + t.doors + ' doors, ' + t.city + ' ' + t.zip + ')';
+          var tEstLow = Math.round(t.doors / 30 * 60);
+          var tEstHigh = Math.round(t.doors / 20 * 60);
+          return 'Turf ' + t.tid + ' (' + t.doors + ' doors, ~' + tEstLow + '–' + tEstHigh + ' min, ' + t.city + ' ' + t.zip + ')';
         }).join('<br>');
+        var sessEstLow = Math.round(session.total_doors / 30 * 60);
+        var sessEstHigh = Math.round(session.total_doors / 20 * 60);
         var infoHTML = '<div class="turf-info">' +
-          '<div class="turf-info-line"><strong>' + session.total_doors + '</strong> total doors &middot; ' + session.total_voters + ' voters</div>' +
+          '<div class="turf-info-line"><strong>' + session.total_doors + '</strong> total doors &middot; ' + session.total_voters + ' voters &middot; ~' + sessEstLow + '–' + sessEstHigh + ' min est.</div>' +
           '<div class="turf-info-line" style="margin-top:6px;font-size:11px;color:#888">' + turfList + '</div>' +
           '</div>';
 
