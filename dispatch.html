@@ -512,30 +512,7 @@
     var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyjBGtakc05SnyMWSMfgvhR92uxE-NdWQwlk0RYKQ3-lse03BUyif-NUtpgUvgfoc4r/exec';
     var BASE_URL = 'https://randomprojectsforwork.github.io/ClaudeCanvass/';
 
-    var SESSIONS = [
-      {"session":1,"total_doors":10,"total_voters":19,"turfs":[
-        {"tid": 1, "doors": 10, "city": "THORNTON", "zip": "80241", "drive": 0, "center_lat": 39.924753, "center_lon": -104.923841}
-      ]},
-      {"session":2,"total_doors":34,"total_voters":50,"turfs":[
-        {"tid": 2, "doors": 34, "city": "THORNTON", "zip": "80241", "drive": 0, "center_lat": 39.935433, "center_lon": -104.944161}
-      ]},
-      {"session":3,"total_doors":63,"total_voters":95,"turfs":[
-        {"tid": 3, "doors": 32, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.945121, "center_lon": -104.956441},
-        {"tid": 4, "doors": 31, "city": "THORNTON", "zip": "80602", "drive": 2, "center_lat": 39.945568, "center_lon": -104.952668}
-      ]},
-      {"session":4,"total_doors":34,"total_voters":46,"turfs":[
-        {"tid": 5, "doors": 34, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.947518, "center_lon": -104.951233}
-      ]},
-      {"session":5,"total_doors":35,"total_voters":51,"turfs":[
-        {"tid": 6, "doors": 35, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.949719, "center_lon": -104.948786}
-      ]},
-      {"session":6,"total_doors":24,"total_voters":37,"turfs":[
-        {"tid": 7, "doors": 24, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.955454, "center_lon": -104.949291}
-      ]},
-      {"session":7,"total_doors":19,"total_voters":36,"turfs":[
-        {"tid": 8, "doors": 19, "city": "THORNTON", "zip": "80602", "drive": 0, "center_lat": 39.959368, "center_lon": -104.928967}
-      ]}
-    ];
+    var SESSIONS = [{"session":1,"total_doors":34,"total_voters":46,"turfs":[{"tid":1,"doors":34,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.947518,"center_lon":-104.951233}]},{"session":2,"total_doors":35,"total_voters":51,"turfs":[{"tid":2,"doors":35,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.949719,"center_lon":-104.948786}]},{"session":3,"total_doors":24,"total_voters":37,"turfs":[{"tid":3,"doors":24,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.955454,"center_lon":-104.949291}]},{"session":4,"total_doors":19,"total_voters":36,"turfs":[{"tid":4,"doors":19,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.959368,"center_lon":-104.928967}]},{"session":5,"total_doors":59,"total_voters":89,"turfs":[{"tid":5,"doors":59,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.971133,"center_lon":-104.887612}]},{"session":6,"total_doors":62,"total_voters":80,"turfs":[{"tid":6,"doors":62,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.923375,"center_lon":-104.944848}]},{"session":7,"total_doors":56,"total_voters":84,"turfs":[{"tid":7,"doors":56,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.966852,"center_lon":-104.901027}]},{"session":8,"total_doors":39,"total_voters":57,"turfs":[{"tid":8,"doors":39,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.93407,"center_lon":-104.948005}]},{"session":9,"total_doors":37,"total_voters":57,"turfs":[{"tid":9,"doors":37,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.971072,"center_lon":-104.895304}]},{"session":10,"total_doors":69,"total_voters":109,"turfs":[{"tid":10,"doors":69,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.939463,"center_lon":-104.974017}]},{"session":11,"total_doors":48,"total_voters":82,"turfs":[{"tid":11,"doors":48,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.952708,"center_lon":-104.952354}]},{"session":12,"total_doors":61,"total_voters":82,"turfs":[{"tid":12,"doors":61,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.930841,"center_lon":-104.942497}]},{"session":13,"total_doors":66,"total_voters":97,"turfs":[{"tid":13,"doors":66,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.966699,"center_lon":-104.893897}]},{"session":14,"total_doors":53,"total_voters":82,"turfs":[{"tid":14,"doors":53,"city":"WESTMINSTER","zip":"80234","drive":0,"center_lat":39.915139,"center_lon":-105.018028}]},{"session":15,"total_doors":29,"total_voters":42,"turfs":[{"tid":15,"doors":29,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.925871,"center_lon":-104.943618}]},{"session":16,"total_doors":60,"total_voters":89,"turfs":[{"tid":16,"doors":60,"city":"WESTMINSTER","zip":"80234","drive":0,"center_lat":39.933677,"center_lon":-105.011981}]},{"session":17,"total_doors":63,"total_voters":102,"turfs":[{"tid":17,"doors":63,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.943225,"center_lon":-104.945463}]},{"session":18,"total_doors":62,"total_voters":89,"turfs":[{"tid":18,"doors":62,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.93392,"center_lon":-104.943496}]},{"session":19,"total_doors":56,"total_voters":75,"turfs":[{"tid":19,"doors":56,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.929783,"center_lon":-104.960862}]},{"session":20,"total_doors":63,"total_voters":92,"turfs":[{"tid":20,"doors":63,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.94953,"center_lon":-104.942968}]},{"session":21,"total_doors":47,"total_voters":76,"turfs":[{"tid":21,"doors":47,"city":"THORNTON","zip":"80602","drive":0,"center_lat":39.954943,"center_lon":-104.948542}]},{"session":22,"total_doors":61,"total_voters":84,"turfs":[{"tid":22,"doors":61,"city":"NORTHGLENN","zip":"80233","drive":0,"center_lat":39.903477,"center_lon":-104.963691}]},{"session":23,"total_doors":54,"total_voters":71,"turfs":[{"tid":23,"doors":54,"city":"THORNTON","zip":"80241","drive":0,"center_lat":39.932283,"center_lon":-104.954307}]},{"session":24,"total_doors":64,"total_voters":88,"turfs":[{"tid":24,"doors":64,"city":"NORTHGLENN","zip":"80233","drive":0,"center_lat":39.893903,"center_lon":-104.968413}]}];
 
     // ============================================================================
     // STATE
