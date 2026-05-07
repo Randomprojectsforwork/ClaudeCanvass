@@ -218,7 +218,8 @@ var timerInterval = null;
 var volunteerName = '';
 var volunteerCode = '';
 var assignments = {}; // {turf_key: volunteer_name} — loaded from sheet
-var myTurfs = []; // turf IDs assigned to this volunteer
+var completedTurfs = {}; // {turf_key: volunteer_name} — turfs marked done in sheet
+var myTurfs = []; // turf IDs assigned to this volunteer (excludes completed)
 var DISP_COLORS = {'Contacted':'#28a745','Volunteer':'#17a2b8','Lit Drop':'#6f42c1','Refused':'#dc3545','Moved':'#6c757d','Done':'#1B4332','Skipped':'#ffc107'};
 
 // ===== VOLUNTEER NAME =====
@@ -298,8 +299,9 @@ function turfClaimKey(tid) {
 function loadAssignments() {
   var cb = 'assignCB_' + Math.random().toString(36).slice(2);
   window[cb] = function(data) {
-    if (data.status === 'ok' && data.assigned) {
-      assignments = data.assigned;
+    if (data.status === 'ok') {
+      if (data.assigned) assignments = data.assigned;
+      if (data.completed) completedTurfs = data.completed;
       findMyTurfs();
       buildDashboard();
     }
@@ -316,9 +318,15 @@ function findMyTurfs() {
   var nameLower = volunteerName.toLowerCase();
   for (var key in assignments) {
     if (assignments[key].toLowerCase() === nameLower) {
-      // Parse turf ID from key like "s1_t63"
+      // Skip turfs that are marked completed in the sheet
+      if (completedTurfs[key]) continue;
+      // Also skip turfs that are fully knocked locally
       var m = key.match(/t(\d+)$/);
-      if (m) myTurfs.push(parseInt(m[1]));
+      if (m) {
+        var tid = parseInt(m[1]);
+        if (isTurfComplete(tid)) continue;
+        myTurfs.push(tid);
+      }
     }
   }
 }
@@ -784,8 +792,9 @@ if (!volunteerName) loadVolunteerName();
 if (volunteerName) {
   var initCb = 'initCB_' + Math.random().toString(36).slice(2);
   window[initCb] = function(data) {
-    if (data.status === 'ok' && data.assigned) {
-      assignments = data.assigned;
+    if (data.status === 'ok') {
+      if (data.assigned) assignments = data.assigned;
+      if (data.completed) completedTurfs = data.completed;
       findMyTurfs();
       buildDashboard();
       // If URL has a specific turf, load it directly
@@ -832,6 +841,15 @@ function showRouteOverview() {
 function closeRouteOverview() {
   document.getElementById('routeOverlay').classList.remove('show');
 }
+
+// ===== RE-SYNC ASSIGNMENTS ON TAB FOCUS =====
+// When the user switches back to this tab (e.g. after dispatch unassigns),
+// re-fetch assignments so the dashboard stays up to date.
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && volunteerName) {
+    loadAssignments();
+  }
+});
 </script>
 
 <div class="route-overlay" id="routeOverlay" onclick="if(event.target===this)closeRouteOverview()"></div>

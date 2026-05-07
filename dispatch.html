@@ -228,6 +228,35 @@
       color: #721c24;
     }
 
+    .badge-completed {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
+    .turf-card.completed {
+      opacity: 0.5;
+      border-color: #ccc;
+      background: #f0f0f0;
+    }
+    .turf-card.completed:hover {
+      box-shadow: none;
+      border-color: #ccc;
+    }
+
+    .completion-bar {
+      height: 4px;
+      background: #eee;
+      border-radius: 2px;
+      margin: 8px 0;
+      overflow: hidden;
+    }
+    .completion-bar-fill {
+      height: 100%;
+      background: #28a745;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
     .turf-assigned-volunteer {
       margin-bottom: 8px;
       padding: 8px;
@@ -603,8 +632,10 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
     // ============================================================================
     var state = {
       assignments: {}, // {turf_key: volunteer_name}
+      completed: {},   // {turf_key: volunteer_name} — turfs fully knocked
       volunteerCodes: {}, // {volunteer_name: code}
       progressData: {}, // {turf_key: {dispositions: [...]}}
+      turfProgress: {}, // {turf_key: {knocked, contacts, ...}} — from progress endpoint
       turfs: [] // flattened list of turfs with session info
     };
 
@@ -674,12 +705,64 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
     // ============================================================================
     function loadAssignments() {
       jsonpFetch({ action: 'list' }, function(data) {
-        if (data.status === 'ok' && data.assigned) {
-          state.assignments = data.assigned;
+        if (data.status === 'ok') {
+          if (data.assigned) state.assignments = data.assigned;
+          if (data.completed) state.completed = data.completed;
         }
-        renderAssignmentPanel();
-        updateStats();
+        // Also fetch progress to auto-detect completed turfs
+        loadProgress(function() {
+          renderAssignmentPanel();
+          updateStats();
+          if (mapInitialized) renderMapMarkers();
+        });
       });
+    }
+
+    function loadProgress(callback) {
+      jsonpFetch({ action: 'progress' }, function(data) {
+        if (data.status === 'ok' && data.turfs) {
+          state.turfProgress = data.turfs;
+          // Auto-detect completed turfs by comparing knocked vs total doors
+          autoDetectCompleted();
+        }
+        if (callback) callback();
+      });
+    }
+
+    function autoDetectCompleted() {
+      state.turfs.forEach(function(turf) {
+        var key = turf.key;
+        var progress = state.turfProgress[key] || state.turfProgress['canvass_' + key];
+        if (!progress) return;
+        var knocked = progress.knocked || 0;
+        // Mark as completed if >= 90% of doors knocked (allowing for minor discrepancies)
+        if (knocked >= turf.doors * 0.9 && knocked > 0) {
+          if (!state.completed[key]) {
+            state.completed[key] = state.assignments[key] || 'auto';
+          }
+        }
+      });
+    }
+
+    function isSessionCompleted(sessionNum) {
+      var session = SESSIONS.find(function(s) { return s.session === sessionNum; });
+      if (!session) return false;
+      return session.turfs.every(function(t) {
+        var key = 's' + sessionNum + '_t' + t.tid;
+        return !!state.completed[key];
+      });
+    }
+
+    function getSessionProgress(sessionNum) {
+      var session = SESSIONS.find(function(s) { return s.session === sessionNum; });
+      if (!session) return { knocked: 0, total: 0, pct: 0 };
+      var knocked = 0;
+      session.turfs.forEach(function(t) {
+        var key = 's' + sessionNum + '_t' + t.tid;
+        var p = state.turfProgress[key] || state.turfProgress['canvass_' + key];
+        if (p) knocked += p.knocked || 0;
+      });
+      return { knocked: knocked, total: session.total_doors, pct: session.total_doors > 0 ? Math.round(knocked / session.total_doors * 100) : 0 };
     }
 
     function generateVolunteerCode(name) {
@@ -745,7 +828,10 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
         var turfs = session.turfs;
         var turfKeys = turfs.map(function(t) { return 's' + sNum + '_t' + t.tid; });
 
-        // Check assignment status for this session
+        // Check completion and assignment status
+        var sessComplete = isSessionCompleted(sNum);
+        var progress = getSessionProgress(sNum);
+
         var assignedVols = {};
         turfKeys.forEach(function(key) {
           if (state.assignments[key]) assignedVols[state.assignments[key]] = true;
@@ -754,19 +840,41 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
         var allAssigned = turfKeys.every(function(k) { return !!state.assignments[k]; });
 
         var card = document.createElement('div');
-        card.className = 'turf-card';
+        card.className = 'turf-card' + (sessComplete ? ' completed' : '');
 
-        // Session header
+        // Session header with status badge
+        var badgeClass, badgeText;
+        if (sessComplete) {
+          badgeClass = 'badge-completed';
+          badgeText = 'Completed';
+        } else if (allAssigned) {
+          badgeClass = 'badge-assigned';
+          badgeText = 'Assigned';
+        } else {
+          badgeClass = 'badge-unassigned';
+          badgeText = 'Open';
+        }
+
         var headerHTML = '<div class="turf-header">' +
           '<div class="turf-id">Session ' + sNum + '</div>' +
-          '<span class="badge ' + (allAssigned ? 'badge-assigned' : 'badge-unassigned') + '">' +
-          (allAssigned ? 'Assigned' : 'Open') + '</span></div>';
+          '<span class="badge ' + badgeClass + '">' + badgeText + '</span></div>';
+
+        // Progress bar if any doors have been knocked
+        var progressHTML = '';
+        if (progress.knocked > 0) {
+          progressHTML = '<div class="completion-bar"><div class="completion-bar-fill" style="width:' + progress.pct + '%"></div></div>' +
+            '<div style="font-size:11px;color:#666;margin-bottom:8px;">' + progress.knocked + ' / ' + progress.total + ' doors knocked (' + progress.pct + '%)</div>';
+        }
 
         // Session info
         var turfList = turfs.map(function(t) {
           var tEstLow = Math.round(t.doors / 30 * 60);
           var tEstHigh = Math.round(t.doors / 20 * 60);
-          return 'Turf ' + t.tid + ' (' + t.doors + ' doors, ~' + tEstLow + '–' + tEstHigh + ' min, ' + t.city + ' ' + t.zip + ')';
+          var tKey = 's' + sNum + '_t' + t.tid;
+          var tDone = !!state.completed[tKey];
+          var prefix = tDone ? '&#10003; ' : '';
+          var style = tDone ? 'color:#28a745;' : '';
+          return '<span style="' + style + '">' + prefix + 'Turf ' + t.tid + ' (' + t.doors + ' doors, ~' + tEstLow + '–' + tEstHigh + ' min, ' + t.city + ' ' + t.zip + ')</span>';
         }).join('<br>');
         var sessEstLow = Math.round(session.total_doors / 30 * 60);
         var sessEstHigh = Math.round(session.total_doors / 20 * 60);
@@ -776,7 +884,14 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
           '</div>';
 
         var assignHTML = '';
-        if (allAssigned && assignedNames.length > 0) {
+        if (sessComplete) {
+          // Completed — show done state, no assignment controls
+          var completedVol = '';
+          turfKeys.forEach(function(k) { if (state.completed[k] && state.completed[k] !== 'auto') completedVol = state.completed[k]; });
+          if (!completedVol) turfKeys.forEach(function(k) { if (state.assignments[k]) completedVol = state.assignments[k]; });
+          assignHTML = '<div style="text-align:center;padding:8px;color:#28a745;font-weight:600;font-size:14px;">' +
+            '&#10003; All doors knocked' + (completedVol ? ' — ' + completedVol : '') + '</div>';
+        } else if (allAssigned && assignedNames.length > 0) {
           var volName = assignedNames[0];
           var code = generateVolunteerCode(volName);
           var link = BASE_URL + 'app.html?volunteer=' + encodeURIComponent(volName);
@@ -794,7 +909,7 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
             '</div>';
         }
 
-        card.innerHTML = headerHTML + infoHTML + assignHTML;
+        card.innerHTML = headerHTML + progressHTML + infoHTML + assignHTML;
         grid.appendChild(card);
       });
     }
@@ -960,19 +1075,31 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
         totalDoors += session.total_doors;
       });
 
-      var assignedTurfs = Object.keys(state.assignments);
-      assignedTurfs.forEach(function(turfKey) {
-        var data = state.progressData[turfKey];
-        if (data && data.dispositions) {
-          totalDoorsKnocked += data.dispositions.length;
-          totalContacts += data.dispositions.filter(function(d) {
-            return d.disposition && (d.disposition === 'Contacted' || d.disposition === 'Volunteer');
-          }).length;
-          data.dispositions.forEach(function(d) {
-            if (d.timestamp) allTimestamps.push(new Date(d.timestamp).getTime());
-          });
-        }
-      });
+      // Use turfProgress for knocked/contact counts (covers all turfs, not just assigned)
+      for (var tKey in state.turfProgress) {
+        var tp = state.turfProgress[tKey];
+        totalDoorsKnocked += tp.knocked || 0;
+        totalContacts += tp.contacts || 0;
+        if (tp.firstTime) allTimestamps.push(new Date(tp.firstTime).getTime());
+        if (tp.lastTime) allTimestamps.push(new Date(tp.lastTime).getTime());
+      }
+
+      // Fall back to progressData if turfProgress is empty
+      if (Object.keys(state.turfProgress).length === 0) {
+        var assignedTurfs = Object.keys(state.assignments);
+        assignedTurfs.forEach(function(turfKey) {
+          var data = state.progressData[turfKey];
+          if (data && data.dispositions) {
+            totalDoorsKnocked += data.dispositions.length;
+            totalContacts += data.dispositions.filter(function(d) {
+              return d.disposition && (d.disposition === 'Contacted' || d.disposition === 'Volunteer');
+            }).length;
+            data.dispositions.forEach(function(d) {
+              if (d.timestamp) allTimestamps.push(new Date(d.timestamp).getTime());
+            });
+          }
+        });
+      }
 
       var doorsRemaining = totalDoors - totalDoorsKnocked;
       var doorsPercent = totalDoors > 0 ? Math.round((totalDoorsKnocked / totalDoors) * 100) : 0;
@@ -1080,6 +1207,11 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
             'Session ' + s.session + ' (' + s.total_doors + ' doors)' +
             '</div>';
         });
+        html += '<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px;">';
+        html += '<div class="map-legend-item"><div class="map-legend-dot" style="background:#999;border-color:#28a745;opacity:0.5"></div>Completed</div>';
+        html += '<div class="map-legend-item"><div class="map-legend-dot" style="background:#ddd;border-color:#28a745"></div>Assigned</div>';
+        html += '<div class="map-legend-item"><div class="map-legend-dot" style="background:#ddd;border-color:#fff"></div>Open</div>';
+        html += '</div>';
         div.innerHTML = html;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
@@ -1108,15 +1240,34 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
 
           var key = 's' + sNum + '_t' + turf.tid;
           var isAssigned = !!state.assignments[key];
+          var isCompleted = !!state.completed[key];
           var volName = state.assignments[key] || '';
 
-          // Circle marker — filled if assigned, ring if open
+          // Circle marker — grey if completed, green border if assigned, white if open
+          var markerColor, borderColor, borderWeight, opacity;
+          if (isCompleted) {
+            markerColor = '#999';
+            borderColor = '#28a745';
+            borderWeight = 3;
+            opacity = 0.35;
+          } else if (isAssigned) {
+            markerColor = color;
+            borderColor = '#28a745';
+            borderWeight = 3;
+            opacity = 0.5;
+          } else {
+            markerColor = color;
+            borderColor = '#fff';
+            borderWeight = 2;
+            opacity = 0.85;
+          }
+
           var marker = L.circleMarker([turf.center_lat, turf.center_lon], {
             radius: Math.max(10, Math.min(18, turf.doors / 3)),
-            fillColor: color,
-            color: isAssigned ? '#28a745' : '#fff',
-            weight: isAssigned ? 3 : 2,
-            fillOpacity: isAssigned ? 0.5 : 0.85
+            fillColor: markerColor,
+            color: borderColor,
+            weight: borderWeight,
+            fillOpacity: opacity
           });
 
           marker.addTo(dispatchMap);
@@ -1132,27 +1283,30 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
 
           // Build popup
           marker.on('click', function() {
-            // Re-check assignment status at click time
+            // Re-check status at click time
             var currentAssigned = !!state.assignments[key];
-            var currentVol = state.assignments[key] || '';
+            var currentCompleted = !!state.completed[key];
+            var currentVol = state.assignments[key] || state.completed[key] || '';
             var popupId = 'popup-' + key.replace(/[^a-z0-9]/g, '');
+            var progress = getSessionProgress(sNum);
 
             var popupHtml = '<div class="map-popup">' +
               '<div class="popup-title">Session ' + sNum + ', Turf ' + turf.tid + '</div>' +
               '<div class="popup-stat"><strong>Doors:</strong> ' + turf.doors + '</div>' +
               '<div class="popup-stat"><strong>Location:</strong> ' + turf.city + ' ' + turf.zip + '</div>';
 
-            // Progress info if available
-            var data = state.progressData[key];
-            if (data && data.dispositions && data.dispositions.length > 0) {
-              var knocked = data.dispositions.length;
-              var pct = Math.round((knocked / turf.doors) * 100);
-              popupHtml += '<div class="popup-stat"><strong>Progress:</strong> ' + knocked + '/' + turf.doors + ' (' + pct + '%)</div>';
+            // Progress info
+            if (progress.knocked > 0) {
+              popupHtml += '<div class="popup-stat"><strong>Progress:</strong> ' + progress.knocked + '/' + progress.total + ' (' + progress.pct + '%)</div>';
             }
 
             popupHtml += '<div class="popup-assign">';
 
-            if (currentAssigned) {
+            if (currentCompleted) {
+              popupHtml += '<span class="popup-badge-assigned">Completed</span>' +
+                '<div style="margin-top:6px;color:#28a745;font-weight:600;">&#10003; All doors knocked' +
+                (currentVol && currentVol !== 'auto' ? ' — ' + currentVol : '') + '</div>';
+            } else if (currentAssigned) {
               popupHtml += '<span class="popup-badge-assigned">Assigned</span> ' +
                 '<strong>' + currentVol + '</strong>' +
                 '<button class="popup-btn popup-btn-secondary" style="margin-top:8px" ' +
