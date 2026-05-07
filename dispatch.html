@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Canvass Dispatch - Adams County</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     * {
       margin: 0;
@@ -432,6 +434,81 @@
       color: #999;
       margin-left: 10px;
     }
+
+    /* View Toggle */
+    .view-toggle {
+      display: flex;
+      gap: 0;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #ddd;
+    }
+    .view-toggle-btn {
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      background: #f5f5f5;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .view-toggle-btn.active {
+      background: #1B4332;
+      color: white;
+    }
+    .view-toggle-btn:not(.active):hover {
+      background: #e8e8e8;
+    }
+
+    /* Map Container */
+    #dispatch-map {
+      width: 100%;
+      height: 500px;
+      border-radius: 8px;
+      display: none;
+    }
+    #dispatch-map.visible {
+      display: block;
+    }
+
+    /* Map popup styling */
+    .map-popup { font-size: 13px; line-height: 1.5; min-width: 220px; }
+    .map-popup .popup-title { font-weight: 700; color: #1B4332; font-size: 15px; margin-bottom: 6px; }
+    .map-popup .popup-stat { color: #444; margin: 2px 0; }
+    .map-popup .popup-stat strong { color: #1B4332; }
+    .map-popup .popup-assign { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
+    .map-popup .popup-badge-assigned { display: inline-block; background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 500; }
+    .map-popup .popup-badge-open { display: inline-block; background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 500; }
+    .map-popup .popup-input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; margin-top: 6px; }
+    .map-popup .popup-input:focus { outline: none; border-color: #1B4332; }
+    .map-popup .popup-btn { display: block; width: 100%; margin-top: 6px; padding: 8px; background: #1B4332; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .map-popup .popup-btn:hover { background: #0f2818; }
+    .map-popup .popup-btn-secondary { background: #ddd; color: #333; }
+    .map-popup .popup-btn-secondary:hover { background: #ccc; }
+
+    .map-legend {
+      background: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    .map-legend-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; color: #1B4332; }
+    .map-legend-item { display: flex; align-items: center; gap: 6px; }
+    .map-legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.15); }
+
+    .turf-label-dispatch {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      color: white !important;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
@@ -479,9 +556,16 @@
     <div class="panel">
       <div class="panel-header">
         <span>Turf Assignment Manager</span>
-        <span class="refresh-indicator" id="assign-refresh">Ready</span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" id="btn-card-view" onclick="switchView('cards')">Cards</button>
+            <button class="view-toggle-btn" id="btn-map-view" onclick="switchView('map')">Map</button>
+          </div>
+          <span class="refresh-indicator" id="assign-refresh">Ready</span>
+        </div>
       </div>
       <div class="panel-content">
+        <div id="dispatch-map"></div>
         <div class="turf-grid" id="turf-assignment-grid">
           <div class="loading"><span class="spinner"></span>Loading turfs...</div>
         </div>
@@ -621,16 +705,21 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
       var volName = input.value.trim();
       if (!volName) { alert('Please enter a volunteer name'); return; }
       input.disabled = true;
+      assignSession_internal(sessionNum, volName);
+      setTimeout(function() {
+        renderAssignmentPanel();
+        updateStats();
+        if (mapInitialized) renderMapMarkers();
+        input.disabled = false;
+      }, 800);
+    }
+
+    function assignSession_internal(sessionNum, volName) {
       var session = SESSIONS.find(function(s) { return s.session === sessionNum; });
       session.turfs.forEach(function(t) {
         var key = 's' + sessionNum + '_t' + t.tid;
         assignTurf(key, 'Session ' + sessionNum + ' Turf ' + t.tid, volName);
       });
-      setTimeout(function() {
-        renderAssignmentPanel();
-        updateStats();
-        input.disabled = false;
-      }, 800);
     }
 
     function unassignSession(sessionNum) {
@@ -643,6 +732,7 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
       setTimeout(function() {
         renderAssignmentPanel();
         updateStats();
+        if (mapInitialized) renderMapMarkers();
       }, 500);
     }
 
@@ -949,10 +1039,198 @@ var SESSIONS = [{"session":1,"total_doors":52,"total_voters":80,"turfs":[{"tid":
       }, 1000);
     }
 
+    // ============================================================================
+    // MAP VIEW
+    // ============================================================================
+    var dispatchMap = null;
+    var mapMarkers = [];
+    var mapInitialized = false;
+
+    // Session color palette
+    var sessionColors = [
+      '#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261',
+      '#264653','#9b5de5','#00bbf9','#00f5d4','#ff006e',
+      '#8338ec','#3a86ff','#fb5607','#ffbe0b','#06d6a0',
+      '#118ab2','#ef476f','#ffd166','#073b4c','#8ac926'
+    ];
+
+    function getSessionColor(sessionNum) {
+      return sessionColors[(sessionNum - 1) % sessionColors.length];
+    }
+
+    function initMap() {
+      if (mapInitialized) return;
+      mapInitialized = true;
+
+      dispatchMap = L.map('dispatch-map', { zoomControl: true });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap',
+        maxZoom: 19
+      }).addTo(dispatchMap);
+
+      // Add legend control
+      var legend = L.control({ position: 'bottomleft' });
+      legend.onAdd = function() {
+        var div = L.DomUtil.create('div', 'map-legend');
+        var html = '<div class="map-legend-title">Sessions</div>';
+        SESSIONS.forEach(function(s) {
+          var col = getSessionColor(s.session);
+          html += '<div class="map-legend-item">' +
+            '<div class="map-legend-dot" style="background:' + col + '"></div>' +
+            'Session ' + s.session + ' (' + s.total_doors + ' doors)' +
+            '</div>';
+        });
+        div.innerHTML = html;
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        return div;
+      };
+      legend.addTo(dispatchMap);
+
+      renderMapMarkers();
+    }
+
+    function renderMapMarkers() {
+      if (!dispatchMap) return;
+
+      // Clear existing markers
+      mapMarkers.forEach(function(m) { dispatchMap.removeLayer(m); });
+      mapMarkers = [];
+
+      var bounds = [];
+
+      SESSIONS.forEach(function(session) {
+        var sNum = session.session;
+        var color = getSessionColor(sNum);
+
+        session.turfs.forEach(function(turf) {
+          if (!turf.center_lat || !turf.center_lon) return;
+
+          var key = 's' + sNum + '_t' + turf.tid;
+          var isAssigned = !!state.assignments[key];
+          var volName = state.assignments[key] || '';
+
+          // Circle marker — filled if assigned, ring if open
+          var marker = L.circleMarker([turf.center_lat, turf.center_lon], {
+            radius: Math.max(10, Math.min(18, turf.doors / 3)),
+            fillColor: color,
+            color: isAssigned ? '#28a745' : '#fff',
+            weight: isAssigned ? 3 : 2,
+            fillOpacity: isAssigned ? 0.5 : 0.85
+          });
+
+          marker.addTo(dispatchMap);
+          bounds.push([turf.center_lat, turf.center_lon]);
+
+          // Tooltip with session/turf label
+          marker.bindTooltip('S' + sNum, {
+            permanent: true,
+            direction: 'center',
+            className: 'turf-label-dispatch',
+            offset: [0, 0]
+          });
+
+          // Build popup
+          marker.on('click', function() {
+            // Re-check assignment status at click time
+            var currentAssigned = !!state.assignments[key];
+            var currentVol = state.assignments[key] || '';
+            var popupId = 'popup-' + key.replace(/[^a-z0-9]/g, '');
+
+            var popupHtml = '<div class="map-popup">' +
+              '<div class="popup-title">Session ' + sNum + ', Turf ' + turf.tid + '</div>' +
+              '<div class="popup-stat"><strong>Doors:</strong> ' + turf.doors + '</div>' +
+              '<div class="popup-stat"><strong>Location:</strong> ' + turf.city + ' ' + turf.zip + '</div>';
+
+            // Progress info if available
+            var data = state.progressData[key];
+            if (data && data.dispositions && data.dispositions.length > 0) {
+              var knocked = data.dispositions.length;
+              var pct = Math.round((knocked / turf.doors) * 100);
+              popupHtml += '<div class="popup-stat"><strong>Progress:</strong> ' + knocked + '/' + turf.doors + ' (' + pct + '%)</div>';
+            }
+
+            popupHtml += '<div class="popup-assign">';
+
+            if (currentAssigned) {
+              popupHtml += '<span class="popup-badge-assigned">Assigned</span> ' +
+                '<strong>' + currentVol + '</strong>' +
+                '<button class="popup-btn popup-btn-secondary" style="margin-top:8px" ' +
+                'onclick="mapUnassignSession(' + sNum + ')">Unassign Session</button>';
+            } else {
+              popupHtml += '<span class="popup-badge-open">Open</span>' +
+                '<input type="text" class="popup-input" id="' + popupId + '" placeholder="Volunteer name" ' +
+                'onkeyup="if(event.key===\'Enter\')mapAssignSession(' + sNum + ',\'' + popupId + '\')">' +
+                '<button class="popup-btn" onclick="mapAssignSession(' + sNum + ',\'' + popupId + '\')">Assign Session ' + sNum + '</button>';
+            }
+
+            popupHtml += '</div></div>';
+
+            marker.bindPopup(popupHtml, { maxWidth: 280 }).openPopup();
+          });
+
+          mapMarkers.push(marker);
+        });
+      });
+
+      if (bounds.length > 0) {
+        dispatchMap.fitBounds(bounds, { padding: [30, 30] });
+      }
+    }
+
+    function mapAssignSession(sessionNum, inputId) {
+      var input = document.getElementById(inputId);
+      if (!input) return;
+      var volName = input.value.trim();
+      if (!volName) { alert('Please enter a volunteer name'); return; }
+      assignSession_internal(sessionNum, volName);
+      dispatchMap.closePopup();
+      setTimeout(function() {
+        renderMapMarkers();
+        renderAssignmentPanel();
+        updateStats();
+      }, 800);
+    }
+
+    function mapUnassignSession(sessionNum) {
+      unassignSession(sessionNum);
+      dispatchMap.closePopup();
+      setTimeout(function() {
+        renderMapMarkers();
+      }, 500);
+    }
+
+    function switchView(mode) {
+      var cardBtn = document.getElementById('btn-card-view');
+      var mapBtn = document.getElementById('btn-map-view');
+      var grid = document.getElementById('turf-assignment-grid');
+      var mapDiv = document.getElementById('dispatch-map');
+
+      if (mode === 'map') {
+        cardBtn.classList.remove('active');
+        mapBtn.classList.add('active');
+        grid.style.display = 'none';
+        mapDiv.classList.add('visible');
+        initMap();
+        setTimeout(function() {
+          dispatchMap.invalidateSize();
+          renderMapMarkers();
+        }, 100);
+      } else {
+        mapBtn.classList.remove('active');
+        cardBtn.classList.add('active');
+        grid.style.display = '';
+        mapDiv.classList.remove('visible');
+      }
+    }
+
     // Expose for inline onclick handlers
     window.assignSession = assignSession;
     window.unassignSession = unassignSession;
     window.copyToClipboard = copyToClipboard;
+    window.switchView = switchView;
+    window.mapAssignSession = mapAssignSession;
+    window.mapUnassignSession = mapUnassignSession;
 
     // Start
     document.addEventListener('DOMContentLoaded', init);
